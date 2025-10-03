@@ -1,0 +1,103 @@
+================================================================================
+ECONOMIC VALIDATION FOR HFT ORDER BOOK STRATEGY
+================================================================================
+Started: 2025-10-03 04:12:34
+
+Generating 5000 samples of realistic market data...
+[OK] Market data generated
+Generating model predictions (accuracy=65%)...
+[OK] Generated 4999 predictions
+
+================================================================================
+RUNNING ECONOMIC VALIDATION SCENARIOS
+================================================================================
+
+Scenario: Low Cost (Maker)
+--------------------------------------------------------------------------------
+  Net Return:          0.00%
+  Sharpe Ratio:        0.00
+  Max Drawdown:        0.00%
+  Cost Capacity:      -2.00 bps
+  Viable:          NO
+
+Scenario: Medium Cost (Retail)
+--------------------------------------------------------------------------------
+  Net Return:          0.00%
+  Sharpe Ratio:        0.00
+  Max Drawdown:        0.00%
+  Cost Capacity:      -5.00 bps
+  Viable:          NO
+
+Scenario: High Cost (Aggressive)
+--------------------------------------------------------------------------------
+  Net Return:          0.00%
+  Sharpe Ratio:        0.00
+  Max Drawdown:        0.00%
+  Cost Capacity:     -10.00 bps
+  Viable:          NO
+
+[OK] Saved visualization to data/simulations/economic_validation_scenarios.png
+
+================================================================================
+DETAILED REPORT - MEDIUM COST SCENARIO (MOST REALISTIC)
+================================================================================
+================================================================================
+ECONOMIC VALIDATION REPORT
+================================================================================
+
+[RETURNS]
+  Gross Return:              0.00%
+  Net Return:                0.00%
+  Transaction Cost Drag:     0.00%
+
+[RISK-ADJUSTED PERFORMANCE]
+  Sharpe Ratio:              0.00
+  Deflated Sharpe Ratio:     0.00
+  Sortino Ratio:             0.00
+  Calmar Ratio:              0.00
+
+[DRAWDOWN ANALYSIS]
+  Maximum Drawdown:          0.00%
+  Average Drawdown:          0.00%
+  Drawdown Duration:            0 periods
+
+[TRADE STATISTICS]
+  Total Trades:                 0
+  Win Rate:                  0.00%
+  Profit Factor:             0.00
+  Avg Holding Period:           0 seconds
+
+[ECONOMIC VIABILITY]
+  Breakeven Cost:            0.00 bps
+  Cost Capacity:            -5.00 bps
+  Economically Viable:         NO
+
+[STATISTICAL SIGNIFICANCE]
+  t-statistic:               0.00
+  p-value:                 1.0000
+  Statistically Sig.:          NO (alpha=0.05)
+
+================================================================================
+VERDICT: Strategy FAILS economic validation [FAIL]
+  - Returns not statistically significant
+  - Cannot absorb realistic transaction costs
+  - Negative net returns
+================================================================================
+
+================================================================================
+SUMMARY
+================================================================================
+Scenarios Tested:        3
+Economically Viable:     0/3
+
+[FAIL] Strategy not viable under any tested scenario
+
+Key Insights:
+  - Transaction costs significantly impact profitability
+  - Market impact and slippage must be carefully modeled
+  - Statistical significance testing prevents overfitting
+  - Deflated Sharpe ratio accounts for multiple testing bias
+
+================================================================================
+Completed: 2025-10-03 04:12:36
+================================================================================

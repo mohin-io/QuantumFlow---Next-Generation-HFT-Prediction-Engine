@@ -72,6 +72,8 @@ fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
 pydantic>=2.0.0
 python-multipart>=0.0.6
+slowapi>=0.1.9  # Rate limiting for FastAPI
+email-validator>=2.1.0  # Email validation for Pydantic
 
 # Workflow Orchestration
 apache-airflow>=2.6.0
@@ -99,10 +101,20 @@ hypothesis>=6.80.0
 # Code Quality
 black>=23.3.0
 flake8>=6.0.0
+flake8-docstrings>=1.7.0  # Docstring linting
+flake8-bugbear>=23.12.0  # Additional bug detection
+flake8-comprehensions>=3.14.0  # Comprehension checks
+flake8-simplify>=0.21.0  # Code simplification suggestions
 mypy>=1.4.0
+types-requests>=2.31.0  # Type stubs for requests
+types-PyYAML>=6.0.0  # Type stubs for YAML
+types-redis>=4.6.0  # Type stubs for Redis
 pylint>=2.17.0
 isort>=5.12.0
 pre-commit>=3.3.0
+bandit>=1.7.6  # Security linting
+interrogate>=1.5.0  # Docstring coverage
+yamllint>=1.33.0  # YAML linting
 
 # Performance & Profiling
 numba>=0.57.0
