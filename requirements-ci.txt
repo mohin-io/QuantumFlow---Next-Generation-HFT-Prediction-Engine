@@ -1,0 +1,43 @@
+# Lightweight requirements for CI/CD testing
+# Core Data Processing
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+scipy>=1.10.0,<2.0.0
+
+# Time Series & Financial Data
+ta-lib>=0.4.28
+
+# Machine Learning Core
+scikit-learn>=1.3.0,<2.0.0
+
+# Deep Learning - PyTorch (lighter subset)
+torch>=2.0.0,<3.0.0
+
+# Time Series Forecasting
+statsmodels>=0.14.0,<1.0.0
+
+# API & Web Framework
+fastapi>=0.100.0,<1.0.0
+uvicorn[standard]>=0.22.0,<1.0.0
+pydantic>=2.0.0,<3.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Logging
+loguru>=0.7.0
+
+# Testing (will be installed separately in CI)
+# pytest>=7.4.0
+# pytest-cov>=4.1.0
+# pytest-asyncio>=0.21.0
+
+# Code Quality (will be installed separately in CI)
+# black>=23.3.0
+# flake8>=6.0.0
+# mypy>=1.4.0
+
+# Utilities
+tqdm>=4.65.0
+requests>=2.31.0
