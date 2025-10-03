@@ -1,7 +1,7 @@
 # Monitoring and Load Testing Guide
-## HFT Prediction API - Production Observability
+## QuantumFlow - Production Observability & Performance Testing
 
-This guide covers setting up comprehensive monitoring with Prometheus + Grafana and load testing with Locust.
+This guide covers setting up comprehensive monitoring with Prometheus + Grafana and load testing with Locust for the QuantumFlow HFT Prediction Engine.
 
 ---
 

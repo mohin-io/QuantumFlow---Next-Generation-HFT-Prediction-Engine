@@ -1,4 +1,4 @@
-# High-Frequency Trading Prediction System
+# QuantumFlow - Next-Generation HFT Prediction Engine
 ## Explained in Simple Terms (10-Minute Read)
 
 ---
