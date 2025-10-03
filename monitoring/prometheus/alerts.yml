@@ -1,0 +1,149 @@
+# Prometheus Alert Rules for HFT API
+
+groups:
+  - name: hft_api_alerts
+    interval: 30s
+    rules:
+      # High API Latency
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(hft_api_request_latency_seconds_bucket[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency detected"
+          description: "API P95 latency is {{ $value }}s (threshold: 0.1s) for endpoint {{ $labels.endpoint }}"
+
+      - alert: CriticalAPILatency
+        expr: histogram_quantile(0.95, rate(hft_api_request_latency_seconds_bucket[5m])) > 0.5
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical API latency detected"
+          description: "API P95 latency is {{ $value }}s (threshold: 0.5s) for endpoint {{ $labels.endpoint }}"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(hft_errors_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors/sec for {{ $labels.error_type }} on {{ $labels.endpoint }}"
+
+      - alert: CriticalErrorRate
+        expr: rate(hft_errors_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical error rate detected"
+          description: "Error rate is {{ $value }} errors/sec for {{ $labels.error_type }} on {{ $labels.endpoint }}"
+
+      # Low Cache Hit Rate
+      - alert: LowCacheHitRate
+        expr: rate(hft_cache_hits_total[5m]) / (rate(hft_cache_hits_total[5m]) + rate(hft_cache_misses_total[5m])) < 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 30%)"
+
+      # Low Model Accuracy
+      - alert: LowModelAccuracy
+        expr: hft_model_accuracy < 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "Low model accuracy detected"
+          description: "Model {{ $labels.model_name }} accuracy is {{ $value | humanizePercentage }} (threshold: 50%)"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: hft_memory_usage_bytes > 8e9  # 8GB
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize1024 }}B (threshold: 8GB)"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: hft_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # API Down
+      - alert: APIDown
+        expr: up{job="hft-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "HFT API is down"
+          description: "HFT API has been down for more than 1 minute"
+
+      # Low Request Rate (possible issue)
+      - alert: LowRequestRate
+        expr: rate(hft_api_requests_total[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: info
+          component: api
+        annotations:
+          summary: "Low API request rate"
+          description: "API request rate is {{ $value }} req/sec (might indicate traffic issue)"
+
+      # Prediction Latency Anomaly
+      - alert: PredictionLatencyAnomaly
+        expr: |
+          histogram_quantile(0.95, rate(hft_prediction_latency_seconds_bucket[5m]))
+          >
+          2 * avg_over_time(histogram_quantile(0.95, rate(hft_prediction_latency_seconds_bucket[5m]))[1h:5m])
+        for: 3m
+        labels:
+          severity: warning
+          component: ml
+        annotations:
+          summary: "Prediction latency anomaly detected"
+          description: "Prediction latency for {{ $labels.model_name }} is 2x higher than 1-hour average"
+
+      # Database Connection Issues
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      # Redis Down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 1 minute"

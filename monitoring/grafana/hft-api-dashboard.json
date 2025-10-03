@@ -1,0 +1,320 @@
+{
+  "dashboard": {
+    "title": "HFT Prediction API Dashboard",
+    "tags": ["hft", "trading", "ml", "api"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(hft_api_requests_total[5m])",
+            "legendFormat": "{{endpoint}} - {{status}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Requests/sec", "format": "reqps"},
+          {"show": false}
+        ],
+        "xaxis": {"show": true, "mode": "time"},
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2
+      },
+      {
+        "id": 2,
+        "title": "API Latency (P95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(hft_api_request_latency_seconds_bucket[5m]))",
+            "legendFormat": "P95 - {{endpoint}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(hft_api_request_latency_seconds_bucket[5m]))",
+            "legendFormat": "P50 - {{endpoint}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"label": "Latency", "format": "s"},
+          {"show": false}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.1], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "High API Latency Alert"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Active Requests",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "hft_api_active_requests",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Active", "format": "short"},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Total Predictions",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(hft_predictions_total)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(hft_cache_hits_total[5m]) / (rate(hft_cache_hits_total[5m]) + rate(hft_cache_misses_total[5m]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.5, "color": "yellow"},
+                {"value": 0.7, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(hft_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Errors/sec", "format": "short"},
+          {"show": false}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "High Error Rate Alert"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Prediction Latency by Model",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "rate(hft_prediction_latency_seconds_bucket[5m])",
+            "legendFormat": "{{model_name}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ],
+        "options": {
+          "showLegend": true,
+          "calculate": true
+        }
+      },
+      {
+        "id": 8,
+        "title": "Predictions by Model and Class",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "sum by(model_name, prediction_class) (hft_predictions_total)",
+            "legendFormat": "{{model_name}} - {{prediction_class}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "display": "table",
+            "placement": "right"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Model Accuracy",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "hft_model_accuracy",
+            "legendFormat": "{{model_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Accuracy", "format": "percentunit", "min": 0, "max": 1},
+          {"show": false}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.5], "type": "lt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "Low Model Accuracy Alert"
+        }
+      },
+      {
+        "id": 10,
+        "title": "Prediction Confidence Distribution",
+        "type": "histogram",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 22},
+        "targets": [
+          {
+            "expr": "rate(hft_prediction_confidence_bucket[5m])",
+            "legendFormat": "{{model_name}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Snapshots Processed by Exchange",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "rate(hft_snapshots_processed_total[5m])",
+            "legendFormat": "{{exchange}} - {{symbol}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Snapshots/sec", "format": "short"},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Features Computed",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "rate(hft_features_computed_total[5m])",
+            "legendFormat": "{{feature_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Features/sec", "format": "short"},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 34},
+        "targets": [
+          {
+            "expr": "hft_memory_usage_bytes",
+            "legendFormat": "Memory",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Bytes", "format": "bytes"},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 14,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 34},
+        "targets": [
+          {
+            "expr": "hft_cpu_usage_percent",
+            "legendFormat": "CPU",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Percent", "format": "percent", "min": 0, "max": 100},
+          {"show": false}
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Cache Size",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 34},
+        "targets": [
+          {
+            "expr": "hft_cache_size_bytes",
+            "legendFormat": "Cache",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"label": "Bytes", "format": "bytes"},
+          {"show": false}
+        ]
+      }
+    ]
+  }
+}
