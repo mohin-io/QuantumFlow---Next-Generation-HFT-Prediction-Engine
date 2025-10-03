@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from features.order_flow_imbalance import OFICalculator, OrderBookState
 from features.micro_price import MicroPriceCalculator
-from features.volume_profile import VolumeProfileCalculator
+from features.volume_profiles import VolumeProfileCalculator
 from features.feature_pipeline import FeaturePipeline, FeaturePipelineConfig
 from backtesting.backtest_engine import BacktestEngine, BacktestConfig
 from backtesting.economic_validation import EconomicValidator, MarketConditions
