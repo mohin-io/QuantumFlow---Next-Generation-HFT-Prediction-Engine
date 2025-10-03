@@ -1,0 +1,112 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+credentials.json
+secrets.yaml
+config/secrets/
+
+# Data files
+data/raw/*
+data/processed/*
+data/simulations/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/simulations/.gitkeep
+*.csv
+*.parquet
+*.h5
+*.hdf5
+*.db
+*.sqlite
+
+# Model artifacts
+models/saved/*
+*.pth
+*.pt
+*.h5
+*.pkl
+*.joblib
+!models/saved/.gitkeep
+
+# Logs
+logs/
+*.log
+mlruns/
+wandb/
+
+# Database
+*.db
+*.sqlite3
+postgres_data/
+influxdb_data/
+
+# Kafka
+kafka_data/
+zookeeper_data/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# System
+Thumbs.db
+.DS_Store
+
+# Airflow
+airflow/logs/
+airflow/*.db
+airflow/*.pid
+airflow/*.cfg.lock
+
+# API keys and credentials
+*.pem
+*.key
+api_keys.txt
