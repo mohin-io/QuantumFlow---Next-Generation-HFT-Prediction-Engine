@@ -377,3 +377,6 @@ if __name__ == "__main__":
 
     except ImportError:
         print("\nMatplotlib not available for visualization")
+
+# Alias for backward compatibility
+OFICalculator = OrderFlowImbalanceCalculator
