@@ -55,6 +55,27 @@ This project implements a production-grade high-frequency trading (HFT) system t
 - **Model**: 2-layer LSTM (128 hidden units, 175K parameters)
 - **Features**: 40+ microstructure signals
 
+## 🌍 NEW: ESG Analytics Dashboard
+
+**Interactive Streamlit application for Environmental, Social, and Governance (ESG) analysis.**
+
+### Features:
+- 🏢 **Company ESG Scorecards** - Comprehensive ESG evaluation with AAA-B ratings
+- 📊 **Risk-Return Tradeoff** - Visualize ESG impact on financial performance
+- 🚨 **Sentiment Alerts** - Real-time ESG risk monitoring and notifications
+- 🎯 **What-If Simulator** - Interactive scenario analysis (e.g., "What if CO2 drops by 10%?")
+- 📋 **Portfolio Overview** - Aggregate ESG metrics and sector analysis
+
+### Quick Launch:
+```bash
+python run_esg_dashboard.py
+# Opens at http://localhost:8502
+```
+
+**[📖 Full ESG Dashboard Guide](docs/ESG_DASHBOARD_GUIDE.md)**
+
+---
+
 ## 🚀 Quickstart
 
 ### Prerequisites
