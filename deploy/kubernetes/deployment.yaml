@@ -1,0 +1,421 @@
+# Kubernetes Deployment for HFT System
+# Can be used on AWS EKS, GCP GKE, or any Kubernetes cluster
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hft-production
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hft-config
+  namespace: hft-production
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  PREDICTION_LATENCY_TARGET_MS: "50"
+  FEATURE_COUNT: "60"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hft-secrets
+  namespace: hft-production
+type: Opaque
+stringData:
+  DB_PASSWORD: "changeme"
+  REDIS_PASSWORD: "changeme"
+  API_SECRET_KEY: "changeme"
+
+---
+# PostgreSQL + TimescaleDB StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescaledb
+  namespace: hft-production
+spec:
+  ports:
+    - port: 5432
+  clusterIP: None
+  selector:
+    app: timescaledb
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescaledb
+  namespace: hft-production
+spec:
+  serviceName: timescaledb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+      - name: timescaledb
+        image: timescale/timescaledb:latest-pg15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: hft_orderbook
+        - name: POSTGRES_USER
+          value: hftadmin
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hft-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: timescaledb-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+  volumeClaimTemplates:
+  - metadata:
+      name: timescaledb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+
+---
+# Redis Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: hft-production
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: redis
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: hft-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        command:
+          - redis-server
+          - --requirepass
+          - $(REDIS_PASSWORD)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hft-secrets
+              key: REDIS_PASSWORD
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+
+---
+# Kafka StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: hft-production
+spec:
+  ports:
+    - port: 9092
+  clusterIP: None
+  selector:
+    app: kafka
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: hft-production
+spec:
+  serviceName: kafka
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.5.0
+        ports:
+        - containerPort: 9092
+        env:
+        - name: KAFKA_BROKER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: zookeeper:2181
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: PLAINTEXT://kafka:9092
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+
+---
+# FastAPI Application Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: hft-api
+  namespace: hft-production
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    app: hft-api
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hft-api
+  namespace: hft-production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hft-api
+  template:
+    metadata:
+      labels:
+        app: hft-api
+    spec:
+      containers:
+      - name: hft-api
+        image: your-registry/hft-api:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_HOST
+          value: timescaledb
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: hft_orderbook
+        - name: DB_USER
+          value: hftadmin
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hft-secrets
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          value: redis
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hft-secrets
+              key: REDIS_PASSWORD
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+
+---
+# HorizontalPodAutoscaler for API
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hft-api-hpa
+  namespace: hft-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hft-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Streamlit Dashboard Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: hft-dashboard
+  namespace: hft-production
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8501
+  selector:
+    app: hft-dashboard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hft-dashboard
+  namespace: hft-production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hft-dashboard
+  template:
+    metadata:
+      labels:
+        app: hft-dashboard
+    spec:
+      containers:
+      - name: hft-dashboard
+        image: your-registry/hft-dashboard:latest
+        ports:
+        - containerPort: 8501
+        env:
+        - name: API_URL
+          value: http://hft-api
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+
+---
+# Ingestion Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hft-ingestion
+  namespace: hft-production
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: hft-ingestion
+  template:
+    metadata:
+      labels:
+        app: hft-ingestion
+    spec:
+      containers:
+      - name: ingestion-worker
+        image: your-registry/hft-ingestion:latest
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: kafka:9092
+        - name: BINANCE_API_KEY
+          value: ""  # Public endpoints don't need key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hft-network-policy
+  namespace: hft-production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: hft-production
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: hft-production
+  - to:  # Allow external API calls
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
