@@ -55,7 +55,35 @@ This project implements a production-grade high-frequency trading (HFT) system t
 - **Model**: 2-layer LSTM (128 hidden units, 175K parameters)
 - **Features**: 40+ microstructure signals
 
-## 🌍 NEW: ESG Analytics Dashboard
+## 🔴 LIVE: Real-Time HFT Trading Dashboard
+
+**Professional-grade live trading platform with real market data from Binance & Coinbase!**
+
+### Features:
+- 📊 **Live Order Book** - Real-time visualization with 20 levels depth
+- 🎯 **AI Trading Signals** - Dynamic signal generation from live order flow
+- 💰 **Performance Tracking** - Real-time P&L, win rate, and trade analytics
+- 🔍 **Arbitrage Scanner** - Cross-exchange opportunity detection
+- 📈 **Market Analytics** - 24h stats, volume, spread monitoring
+
+### Quick Launch:
+```bash
+python run_hft_live_dashboard.py
+# Opens at http://localhost:8503
+```
+
+**Key Highlights:**
+- ✅ **Real Data**: Live feeds from Binance and Coinbase APIs
+- ✅ **Sub-second Updates**: Auto-refresh (1-10 sec configurable)
+- ✅ **No API Keys Needed**: Public data endpoints
+- ✅ **Realistic Costs**: Slippage (5 bps) + fees (10 bps) modeled
+- ✅ **Arbitrage Detection**: Cross-exchange spread analysis
+
+**[📖 Full HFT Dashboard Guide](docs/HFT_LIVE_DASHBOARD_GUIDE.md)**
+
+---
+
+## 🌍 ESG Analytics Dashboard
 
 **Interactive Streamlit application for Environmental, Social, and Governance (ESG) analysis.**
 
