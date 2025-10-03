@@ -65,7 +65,7 @@ class BaseOrderBookClient(ABC):
         symbol: str,
         on_message_callback: Optional[Callable[[OrderBookSnapshot], None]] = None,
         reconnect_delay: int = 5,
-        max_reconnects: int = 10
+        max_reconnects: int = 10,
     ):
         self.symbol = symbol
         self.on_message_callback = on_message_callback
@@ -115,7 +115,9 @@ class BaseOrderBookClient(ABC):
 
         if self.running and self.reconnect_count < self.max_reconnects:
             self.reconnect_count += 1
-            logger.info(f"Reconnecting in {self.reconnect_delay}s (attempt {self.reconnect_count}/{self.max_reconnects})")
+            logger.info(
+                f"Reconnecting in {self.reconnect_delay}s (attempt {self.reconnect_count}/{self.max_reconnects})"
+            )
             time.sleep(self.reconnect_delay)
             self.connect()
         else:
@@ -132,7 +134,7 @@ class BaseOrderBookClient(ABC):
             on_open=self.on_open,
             on_message=self.on_message,
             on_error=self.on_error,
-            on_close=self.on_close
+            on_close=self.on_close,
         )
 
         self.running = True
@@ -158,11 +160,7 @@ class BinanceOrderBookClient(BaseOrderBookClient):
     """
 
     def __init__(
-        self,
-        symbol: str,
-        depth_levels: int = 20,
-        update_speed: str = "100ms",
-        **kwargs
+        self, symbol: str, depth_levels: int = 20, update_speed: str = "100ms", **kwargs
     ):
         """
         Args:
@@ -187,14 +185,14 @@ class BinanceOrderBookClient(BaseOrderBookClient):
             data = json.loads(message)
 
             # Binance depth format
-            if 'lastUpdateId' not in data:
+            if "lastUpdateId" not in data:
                 return None
 
             timestamp = int(datetime.now(timezone.utc).timestamp() * 1000)
 
             # Parse bids and asks
-            bids = [[float(price), float(qty)] for price, qty in data.get('bids', [])]
-            asks = [[float(price), float(qty)] for price, qty in data.get('asks', [])]
+            bids = [[float(price), float(qty)] for price, qty in data.get("bids", [])]
+            asks = [[float(price), float(qty)] for price, qty in data.get("asks", [])]
 
             return OrderBookSnapshot(
                 timestamp=timestamp,
@@ -202,7 +200,7 @@ class BinanceOrderBookClient(BaseOrderBookClient):
                 symbol=self.symbol,
                 bids=bids,
                 asks=asks,
-                sequence=data.get('lastUpdateId')
+                sequence=data.get("lastUpdateId"),
             )
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.error(f"Error parsing Binance message: {e}")
@@ -221,7 +219,7 @@ class CoinbaseOrderBookClient(BaseOrderBookClient):
             symbol: Trading pair (e.g., 'BTC-USD')
         """
         super().__init__(symbol, **kwargs)
-        self.order_book: Dict[str, List[List[float]]] = {'bids': [], 'asks': []}
+        self.order_book: Dict[str, List[List[float]]] = {"bids": [], "asks": []}
 
     def get_exchange_name(self) -> str:
         return "Coinbase"
@@ -236,7 +234,7 @@ class CoinbaseOrderBookClient(BaseOrderBookClient):
         subscribe_message = {
             "type": "subscribe",
             "product_ids": [self.symbol],
-            "channels": ["level2"]
+            "channels": ["level2"],
         }
         ws.send(json.dumps(subscribe_message))
         logger.info(f"Subscribed to {self.symbol} level2 channel")
@@ -245,14 +243,18 @@ class CoinbaseOrderBookClient(BaseOrderBookClient):
         """Parse Coinbase level2 message."""
         try:
             data = json.loads(message)
-            msg_type = data.get('type')
+            msg_type = data.get("type")
 
             # Handle snapshot
-            if msg_type == 'snapshot':
+            if msg_type == "snapshot":
                 timestamp = int(datetime.now(timezone.utc).timestamp() * 1000)
 
-                bids = [[float(price), float(size)] for price, size in data.get('bids', [])]
-                asks = [[float(price), float(size)] for price, size in data.get('asks', [])]
+                bids = [
+                    [float(price), float(size)] for price, size in data.get("bids", [])
+                ]
+                asks = [
+                    [float(price), float(size)] for price, size in data.get("asks", [])
+                ]
 
                 # Sort bids descending, asks ascending
                 bids.sort(key=lambda x: x[0], reverse=True)
@@ -264,11 +266,11 @@ class CoinbaseOrderBookClient(BaseOrderBookClient):
                     symbol=self.symbol,
                     bids=bids[:50],  # Top 50 levels
                     asks=asks[:50],
-                    sequence=None
+                    sequence=None,
                 )
 
             # Handle l2update
-            elif msg_type == 'l2update':
+            elif msg_type == "l2update":
                 # For updates, we'd need to maintain state
                 # For simplicity, we'll skip updates and rely on snapshots
                 return None
@@ -284,7 +286,9 @@ def print_order_book_summary(snapshot: OrderBookSnapshot):
     """Helper function to print order book summary."""
     print(f"\n{'='*60}")
     print(f"Exchange: {snapshot.exchange.upper()} | Symbol: {snapshot.symbol}")
-    print(f"Timestamp: {datetime.fromtimestamp(snapshot.timestamp/1000, tz=timezone.utc)}")
+    print(
+        f"Timestamp: {datetime.fromtimestamp(snapshot.timestamp/1000, tz=timezone.utc)}"
+    )
     print(f"Mid Price: ${snapshot.mid_price:,.2f}")
     print(f"Spread: ${snapshot.spread:.4f} ({snapshot.spread_bps:.2f} bps)")
     print(f"\nTop 5 Levels:")
@@ -294,7 +298,9 @@ def print_order_book_summary(snapshot: OrderBookSnapshot):
     for i in range(min(5, len(snapshot.bids), len(snapshot.asks))):
         bid_price, bid_qty = snapshot.bids[i] if i < len(snapshot.bids) else (0, 0)
         ask_price, ask_qty = snapshot.asks[i] if i < len(snapshot.asks) else (0, 0)
-        print(f"${bid_price:>10.2f} x {bid_qty:>10.4f} | ${ask_price:>10.2f} x {ask_qty:>10.4f}")
+        print(
+            f"${bid_price:>10.2f} x {bid_qty:>10.4f} | ${ask_price:>10.2f} x {ask_qty:>10.4f}"
+        )
 
 
 # CLI Interface
@@ -302,9 +308,20 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="WebSocket Order Book Data Collector")
-    parser.add_argument("--exchange", choices=["binance", "coinbase"], required=True, help="Exchange name")
-    parser.add_argument("--symbol", required=True, help="Trading symbol (e.g., BTCUSDT for Binance, BTC-USD for Coinbase)")
-    parser.add_argument("--depth", type=int, default=20, help="Depth levels for Binance (5, 10, 20)")
+    parser.add_argument(
+        "--exchange",
+        choices=["binance", "coinbase"],
+        required=True,
+        help="Exchange name",
+    )
+    parser.add_argument(
+        "--symbol",
+        required=True,
+        help="Trading symbol (e.g., BTCUSDT for Binance, BTC-USD for Coinbase)",
+    )
+    parser.add_argument(
+        "--depth", type=int, default=20, help="Depth levels for Binance (5, 10, 20)"
+    )
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
 
     args = parser.parse_args()
@@ -318,12 +335,11 @@ if __name__ == "__main__":
         client = BinanceOrderBookClient(
             symbol=args.symbol,
             depth_levels=args.depth,
-            on_message_callback=print_order_book_summary
+            on_message_callback=print_order_book_summary,
         )
     else:  # coinbase
         client = CoinbaseOrderBookClient(
-            symbol=args.symbol,
-            on_message_callback=print_order_book_summary
+            symbol=args.symbol, on_message_callback=print_order_book_summary
         )
 
     try:

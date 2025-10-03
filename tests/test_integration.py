@@ -14,7 +14,7 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from features.order_flow_imbalance import OFICalculator, OrderBookState
 from features.micro_price import MicroPriceCalculator
@@ -41,20 +41,12 @@ class TestEndToEndPipeline:
         for i in range(n):
             price = base_price + np.random.randn() * 0.5
 
-            bids = [
-                [price - 0.01 * j, np.random.uniform(1, 10)]
-                for j in range(1, 11)
-            ]
+            bids = [[price - 0.01 * j, np.random.uniform(1, 10)] for j in range(1, 11)]
 
-            asks = [
-                [price + 0.01 * j, np.random.uniform(1, 10)]
-                for j in range(1, 11)
-            ]
+            asks = [[price + 0.01 * j, np.random.uniform(1, 10)] for j in range(1, 11)]
 
             snapshot = OrderBookState(
-                timestamp=1000000 + i * 1000,
-                bids=bids,
-                asks=asks
+                timestamp=1000000 + i * 1000, bids=bids, asks=asks
             )
 
             snapshots.append(snapshot)
@@ -65,9 +57,7 @@ class TestEndToEndPipeline:
         """Test feature extraction pipeline."""
         # Create pipeline
         config = FeaturePipelineConfig(
-            ofi_levels=[1, 5],
-            ofi_windows=[10, 20],
-            volatility_windows=[10]
+            ofi_levels=[1, 5], ofi_windows=[10, 20], volatility_windows=[10]
         )
         pipeline = FeaturePipeline(config)
 
@@ -80,9 +70,9 @@ class TestEndToEndPipeline:
         assert len(features_df.columns) > 10
 
         # Check for key features
-        assert any('ofi' in col for col in features_df.columns)
-        assert any('micro_price' in col for col in features_df.columns)
-        assert any('volume' in col for col in features_df.columns)
+        assert any("ofi" in col for col in features_df.columns)
+        assert any("micro_price" in col for col in features_df.columns)
+        assert any("volume" in col for col in features_df.columns)
 
         print(f"[OK] Feature pipeline extracted {len(features_df.columns)} features")
 
@@ -90,27 +80,35 @@ class TestEndToEndPipeline:
         """Test backtesting engine."""
         # Generate predictions
         n_samples = 80
-        predictions_df = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=n_samples, freq='1min'),
-            'prediction': np.random.randint(0, 3, n_samples),
-            'probability': np.random.uniform(0.5, 0.95, n_samples)
-        })
+        predictions_df = pd.DataFrame(
+            {
+                "timestamp": pd.date_range(
+                    "2024-01-01", periods=n_samples, freq="1min"
+                ),
+                "prediction": np.random.randint(0, 3, n_samples),
+                "probability": np.random.uniform(0.5, 0.95, n_samples),
+            }
+        )
 
         # Generate prices
         prices = 100 + np.cumsum(np.random.randn(n_samples) * 0.1)
-        prices_df = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=n_samples, freq='1min'),
-            'mid_price': prices,
-            'bid': prices * 0.9995,
-            'ask': prices * 1.0005
-        })
+        prices_df = pd.DataFrame(
+            {
+                "timestamp": pd.date_range(
+                    "2024-01-01", periods=n_samples, freq="1min"
+                ),
+                "mid_price": prices,
+                "bid": prices * 0.9995,
+                "ask": prices * 1.0005,
+            }
+        )
 
         # Run backtest
         config = BacktestConfig(
             initial_capital=100000,
             position_size=0.1,
             transaction_cost_bps=5.0,
-            confidence_threshold=0.6
+            confidence_threshold=0.6,
         )
 
         engine = BacktestEngine(config)
@@ -118,33 +116,41 @@ class TestEndToEndPipeline:
 
         # Assertions
         assert metrics is not None
-        assert 'total_trades' in metrics
-        assert 'total_return' in metrics
-        assert 'sharpe_ratio' in metrics
+        assert "total_trades" in metrics
+        assert "total_return" in metrics
+        assert "sharpe_ratio" in metrics
 
-        print(f"[OK] Backtest completed: {metrics['total_trades']} trades, "
-              f"{metrics['total_return']:.2f}% return")
+        print(
+            f"[OK] Backtest completed: {metrics['total_trades']} trades, "
+            f"{metrics['total_return']:.2f}% return"
+        )
 
     def test_economic_validation(self):
         """Test economic validation pipeline."""
         # Generate data
         n = 100
-        predictions_df = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=n, freq='1min'),
-            'prediction': np.random.choice([0, 2], n, p=[0.4, 0.6]),  # Biased to bullish
-            'probability': np.random.uniform(0.6, 0.9, n)
-        })
+        predictions_df = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=n, freq="1min"),
+                "prediction": np.random.choice(
+                    [0, 2], n, p=[0.4, 0.6]
+                ),  # Biased to bullish
+                "probability": np.random.uniform(0.6, 0.9, n),
+            }
+        )
 
         prices = 100 + np.cumsum(np.random.randn(n) * 0.05)
-        prices_df = pd.DataFrame({
-            'timestamp': pd.date_range('2024-01-01', periods=n, freq='1min'),
-            'mid_price': prices,
-            'close': prices,
-            'bid': prices * 0.9998,
-            'ask': prices * 1.0002,
-            'volume': np.random.lognormal(10, 1, n),
-            'volatility': np.random.uniform(0.001, 0.003, n)
-        })
+        prices_df = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=n, freq="1min"),
+                "mid_price": prices,
+                "close": prices,
+                "bid": prices * 0.9998,
+                "ask": prices * 1.0002,
+                "volume": np.random.lognormal(10, 1, n),
+                "volatility": np.random.uniform(0.001, 0.003, n),
+            }
+        )
 
         # Run validation
         validator = EconomicValidator(MarketConditions())
@@ -152,7 +158,7 @@ class TestEndToEndPipeline:
 
         # Assertions
         assert metrics is not None
-        assert hasattr(metrics, 'overall_score') or 'total_trades' in str(metrics)
+        assert hasattr(metrics, "overall_score") or "total_trades" in str(metrics)
 
         print(f"[OK] Economic validation completed")
 
@@ -168,16 +174,18 @@ class TestAPIIntegration:
 
         # Test order book fetch
         try:
-            book = connector.get_order_book('BTCUSDT', limit=10)
+            book = connector.get_order_book("BTCUSDT", limit=10)
 
             if book:
-                assert book.exchange == 'binance'
-                assert book.symbol == 'BTCUSDT'
+                assert book.exchange == "binance"
+                assert book.symbol == "BTCUSDT"
                 assert len(book.bids) > 0
                 assert len(book.asks) > 0
                 assert book.bids[0][0] < book.asks[0][0]  # Bid < Ask
 
-                print(f"[OK] Live data connector working (BTC @ ${book.bids[0][0]:,.2f})")
+                print(
+                    f"[OK] Live data connector working (BTC @ ${book.bids[0][0]:,.2f})"
+                )
             else:
                 print("[SKIP] Could not fetch live data (network/API limit)")
 
@@ -190,7 +198,7 @@ class TestAPIIntegration:
         state = OrderBookState(
             timestamp=1000000,
             bids=[[100.0, 10.0], [99.9, 8.0], [99.8, 6.0]],
-            asks=[[100.1, 9.0], [100.2, 7.0], [100.3, 5.0]]
+            asks=[[100.1, 9.0], [100.2, 7.0], [100.3, 5.0]],
         )
 
         # OFI
@@ -207,8 +215,8 @@ class TestAPIIntegration:
 
         # Assertions
         assert micro_price > 0
-        assert 'volume_imbalance_3' in vol_metrics
-        assert vol_metrics['volume_imbalance_3'] != 0
+        assert "volume_imbalance_3" in vol_metrics
+        assert vol_metrics["volume_imbalance_3"] != 0
 
         print(f"[OK] Feature calculators integrated (Micro-price: ${micro_price:.2f})")
 
@@ -231,10 +239,7 @@ class TestModelPipeline:
 
         # Create model
         model = OrderBookLSTM(
-            input_size=n_features,
-            hidden_size=64,
-            num_layers=1,
-            num_classes=3
+            input_size=n_features, hidden_size=64, num_layers=1, num_classes=3
         )
 
         # Train for 1 epoch
@@ -264,10 +269,7 @@ class TestModelPipeline:
         from models.lstm_model import OrderBookLSTM
 
         model = OrderBookLSTM(
-            input_size=20,
-            hidden_size=64,
-            num_layers=1,
-            num_classes=3
+            input_size=20, hidden_size=64, num_layers=1, num_classes=3
         )
 
         model.eval()
@@ -302,8 +304,12 @@ class TestSystemIntegration:
 
             snapshot = OrderBookState(
                 timestamp=1000000 + i * 1000,
-                bids=[[price - 0.01 * j, np.random.uniform(5, 15)] for j in range(1, 6)],
-                asks=[[price + 0.01 * j, np.random.uniform(5, 15)] for j in range(1, 6)]
+                bids=[
+                    [price - 0.01 * j, np.random.uniform(5, 15)] for j in range(1, 6)
+                ],
+                asks=[
+                    [price + 0.01 * j, np.random.uniform(5, 15)] for j in range(1, 6)
+                ],
             )
             snapshots.append(snapshot)
 
@@ -318,19 +324,25 @@ class TestSystemIntegration:
         predictions = np.random.randint(0, 3, len(features_df))
         probabilities = np.random.uniform(0.6, 0.9, len(features_df))
 
-        predictions_df = pd.DataFrame({
-            'timestamp': features_df['timestamp'],
-            'prediction': predictions,
-            'probability': probabilities
-        })
+        predictions_df = pd.DataFrame(
+            {
+                "timestamp": features_df["timestamp"],
+                "prediction": predictions,
+                "probability": probabilities,
+            }
+        )
 
         # 4. Backtest
-        prices_df = pd.DataFrame({
-            'timestamp': features_df['timestamp'],
-            'mid_price': features_df.get('micro_price', 100 + np.random.randn(len(features_df))),
-            'bid': features_df['timestamp'].apply(lambda x: 100 * 0.9995),
-            'ask': features_df['timestamp'].apply(lambda x: 100 * 1.0005)
-        })
+        prices_df = pd.DataFrame(
+            {
+                "timestamp": features_df["timestamp"],
+                "mid_price": features_df.get(
+                    "micro_price", 100 + np.random.randn(len(features_df))
+                ),
+                "bid": features_df["timestamp"].apply(lambda x: 100 * 0.9995),
+                "ask": features_df["timestamp"].apply(lambda x: 100 * 1.0005),
+            }
+        )
 
         config = BacktestConfig(confidence_threshold=0.65)
         engine = BacktestEngine(config)
@@ -338,7 +350,7 @@ class TestSystemIntegration:
 
         # Assertions
         assert metrics is not None
-        assert 'total_trades' in metrics
+        assert "total_trades" in metrics
 
         print(f"[OK] End-to-end workflow complete")
         print(f"     Features: {len(features_df.columns)}")
@@ -360,7 +372,7 @@ class TestPerformance:
             snapshot = OrderBookState(
                 timestamp=i * 1000,
                 bids=[[100 - 0.01 * j, 10] for j in range(1, 11)],
-                asks=[[100 + 0.01 * j, 10] for j in range(1, 11)]
+                asks=[[100 + 0.01 * j, 10] for j in range(1, 11)],
             )
             snapshots.append(snapshot)
 
@@ -375,14 +387,16 @@ class TestPerformance:
         # Should process 1000 snapshots in under 10 seconds
         assert elapsed < 10.0
 
-        print(f"[OK] Feature extraction: {elapsed:.2f}s for 1000 snapshots "
-              f"({1000/elapsed:.0f} snapshots/sec)")
+        print(
+            f"[OK] Feature extraction: {elapsed:.2f}s for 1000 snapshots "
+            f"({1000/elapsed:.0f} snapshots/sec)"
+        )
 
 
-if __name__ == '__main__':
-    print('='*80)
-    print('RUNNING END-TO-END INTEGRATION TESTS')
-    print('='*80)
+if __name__ == "__main__":
+    print("=" * 80)
+    print("RUNNING END-TO-END INTEGRATION TESTS")
+    print("=" * 80)
 
     # Run all tests
-    pytest.main([__file__, '-v', '--tb=short'])
+    pytest.main([__file__, "-v", "--tb=short"])

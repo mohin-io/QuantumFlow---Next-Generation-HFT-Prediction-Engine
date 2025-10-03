@@ -45,11 +45,8 @@ class HFTAPIUser(FastHttpUser):
                 [base_price - spread - i * 1, random.uniform(0.5, 5.0)]
                 for i in range(10)
             ],
-            "asks": [
-                [base_price + i * 1, random.uniform(0.5, 5.0)]
-                for i in range(10)
-            ],
-            "sequence": random.randint(10000, 99999)
+            "asks": [[base_price + i * 1, random.uniform(0.5, 5.0)] for i in range(10)],
+            "sequence": random.randint(10000, 99999),
         }
 
     def on_start(self):
@@ -64,14 +61,11 @@ class HFTAPIUser(FastHttpUser):
         payload = {
             "snapshots": [self.get_sample_snapshot() for _ in range(num_snapshots)],
             "model_name": "dummy",
-            "include_features": False
+            "include_features": False,
         }
 
         with self.client.post(
-            "/predict",
-            json=payload,
-            catch_response=True,
-            name="/predict (small)"
+            "/predict", json=payload, catch_response=True, name="/predict (small)"
         ) as response:
             if response.status_code == 200:
                 data = response.json()
@@ -93,14 +87,11 @@ class HFTAPIUser(FastHttpUser):
         payload = {
             "snapshots": [self.get_sample_snapshot() for _ in range(num_snapshots)],
             "model_name": "dummy",
-            "include_features": False
+            "include_features": False,
         }
 
         with self.client.post(
-            "/predict",
-            json=payload,
-            catch_response=True,
-            name="/predict (medium)"
+            "/predict", json=payload, catch_response=True, name="/predict (medium)"
         ) as response:
             if response.status_code in [200, 429]:
                 response.success()
@@ -114,14 +105,11 @@ class HFTAPIUser(FastHttpUser):
         payload = {
             "snapshots": [self.get_sample_snapshot() for _ in range(num_snapshots)],
             "model_name": "dummy",
-            "include_features": False
+            "include_features": False,
         }
 
         with self.client.post(
-            "/predict",
-            json=payload,
-            catch_response=True,
-            name="/predict (large)"
+            "/predict", json=payload, catch_response=True, name="/predict (large)"
         ) as response:
             if response.status_code in [200, 429]:
                 response.success()
@@ -131,7 +119,9 @@ class HFTAPIUser(FastHttpUser):
     @task(3)  # Weight: 3
     def check_health(self):
         """Check API health."""
-        with self.client.get("/health", name="/health", catch_response=True) as response:
+        with self.client.get(
+            "/health", name="/health", catch_response=True
+        ) as response:
             if response.status_code == 200:
                 data = response.json()
                 if data.get("status") == "healthy":
@@ -144,7 +134,9 @@ class HFTAPIUser(FastHttpUser):
     @task(2)  # Weight: 2
     def get_metrics(self):
         """Get API metrics."""
-        with self.client.get("/metrics", name="/metrics", catch_response=True) as response:
+        with self.client.get(
+            "/metrics", name="/metrics", catch_response=True
+        ) as response:
             if response.status_code == 200:
                 response.success()
             else:
@@ -153,7 +145,9 @@ class HFTAPIUser(FastHttpUser):
     @task(2)  # Weight: 2
     def list_models(self):
         """List available models."""
-        with self.client.get("/models", name="/models", catch_response=True) as response:
+        with self.client.get(
+            "/models", name="/models", catch_response=True
+        ) as response:
             if response.status_code == 200:
                 data = response.json()
                 if "models" in data:
@@ -168,14 +162,11 @@ class HFTAPIUser(FastHttpUser):
         """Test API error handling with invalid request."""
         payload = {
             "snapshots": [],  # Empty (should fail validation)
-            "model_name": "dummy"
+            "model_name": "dummy",
         }
 
         with self.client.post(
-            "/predict",
-            json=payload,
-            catch_response=True,
-            name="/predict (invalid)"
+            "/predict", json=payload, catch_response=True, name="/predict (invalid)"
         ) as response:
             # Should return validation error (422)
             if response.status_code == 422:
@@ -200,16 +191,13 @@ class StressTestUser(FastHttpUser):
             "exchange": "binance",
             "symbol": "BTCUSDT",
             "bids": [[50000.0, 1.0]],
-            "asks": [[50001.0, 1.0]]
+            "asks": [[50001.0, 1.0]],
         }
 
     @task
     def rapid_fire_predictions(self):
         """Send predictions rapidly."""
-        payload = {
-            "snapshots": [self.get_sample_snapshot()],
-            "model_name": "dummy"
-        }
+        payload = {"snapshots": [self.get_sample_snapshot()], "model_name": "dummy"}
 
         self.client.post("/predict", json=payload, name="/predict (stress)")
 
@@ -233,7 +221,7 @@ class RealisticTradingUser(HttpUser):
             "exchange": "binance",
             "symbol": "BTCUSDT",
             "bids": [[base_price - i, random.uniform(0.1, 2.0)] for i in range(20)],
-            "asks": [[base_price + i + 5, random.uniform(0.1, 2.0)] for i in range(20)]
+            "asks": [[base_price + i + 5, random.uniform(0.1, 2.0)] for i in range(20)],
         }
 
     @task(15)
@@ -244,7 +232,7 @@ class RealisticTradingUser(HttpUser):
         payload = {
             "snapshots": [self.get_sample_snapshot() for _ in range(num_snapshots)],
             "model_name": "dummy",
-            "include_features": False
+            "include_features": False,
         }
 
         response = self.client.post("/predict", json=payload)
@@ -273,23 +261,26 @@ class RealisticTradingUser(HttpUser):
 # Event Handlers for Custom Reporting
 # ============================================================================
 
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     """Called when load test starts."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("LOAD TEST STARTING")
-    print("="*80)
+    print("=" * 80)
     print(f"Target: {environment.host}")
-    print(f"Users: {environment.runner.target_user_count if hasattr(environment.runner, 'target_user_count') else 'N/A'}")
-    print("="*80 + "\n")
+    print(
+        f"Users: {environment.runner.target_user_count if hasattr(environment.runner, 'target_user_count') else 'N/A'}"
+    )
+    print("=" * 80 + "\n")
 
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
     """Called when load test stops."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("LOAD TEST COMPLETED")
-    print("="*80)
+    print("=" * 80)
 
     stats = environment.stats
 
@@ -304,7 +295,7 @@ def on_test_stop(environment, **kwargs):
     print(f"  Max Response Time: {stats.total.max_response_time:.2f}ms")
     print(f"  Requests/sec: {stats.total.total_rps:.2f}")
 
-    print("\n" + "="*80 + "\n")
+    print("\n" + "=" * 80 + "\n")
 
 
 # ============================================================================
@@ -312,6 +303,7 @@ def on_test_stop(environment, **kwargs):
 # ============================================================================
 
 from locust import LoadTestShape
+
 
 class StepLoadShape(LoadTestShape):
     """

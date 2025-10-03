@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 # Import the app from the improved API
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.api.prediction_service_improved import app, metrics_collector
@@ -98,14 +99,14 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
             "symbol": "BTCUSDT",
             "bids": [[50000.0, 1.5], [49999.0, 2.0], [49998.0, 1.8]],
             "asks": [[50001.0, 1.2], [50002.0, 1.8], [50003.0, 2.1]],
-            "sequence": 12345
+            "sequence": 12345,
         }
 
         # Valid prediction request
         self.valid_request = {
             "snapshots": [self.valid_snapshot for _ in range(10)],
             "model_name": "dummy",
-            "include_features": False
+            "include_features": False,
         }
 
     def test_valid_prediction_request(self):
@@ -200,14 +201,11 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
         # Missing required fields
         invalid_snapshot = {
             "timestamp": 1000,
-            "exchange": "binance"
+            "exchange": "binance",
             # Missing symbol, bids, asks
         }
 
-        invalid_request = {
-            "snapshots": [invalid_snapshot],
-            "model_name": "dummy"
-        }
+        invalid_request = {"snapshots": [invalid_snapshot], "model_name": "dummy"}
 
         response = self.client.post("/predict", json=invalid_request)
 
@@ -218,10 +216,7 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
         invalid_snapshot = self.valid_snapshot.copy()
         invalid_snapshot["bids"] = [[-100.0, 1.5]]  # Negative price
 
-        invalid_request = {
-            "snapshots": [invalid_snapshot],
-            "model_name": "dummy"
-        }
+        invalid_request = {"snapshots": [invalid_snapshot], "model_name": "dummy"}
 
         response = self.client.post("/predict", json=invalid_request)
 
@@ -233,10 +228,7 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
         invalid_snapshot["bids"] = [[50010.0, 1.5]]  # Bid higher than ask
         invalid_snapshot["asks"] = [[50000.0, 1.2]]
 
-        invalid_request = {
-            "snapshots": [invalid_snapshot],
-            "model_name": "dummy"
-        }
+        invalid_request = {"snapshots": [invalid_snapshot], "model_name": "dummy"}
 
         response = self.client.post("/predict", json=invalid_request)
 
@@ -248,10 +240,7 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
         invalid_snapshot = self.valid_snapshot.copy()
         invalid_snapshot["exchange"] = "invalid@exchange!"  # Special chars
 
-        invalid_request = {
-            "snapshots": [invalid_snapshot],
-            "model_name": "dummy"
-        }
+        invalid_request = {"snapshots": [invalid_snapshot], "model_name": "dummy"}
 
         response = self.client.post("/predict", json=invalid_request)
 
@@ -262,10 +251,7 @@ class TestAPIPredictionEndpoint(unittest.TestCase):
         invalid_snapshot = self.valid_snapshot.copy()
         invalid_snapshot["symbol"] = "invalid symbol!"  # Lowercase + space
 
-        invalid_request = {
-            "snapshots": [invalid_snapshot],
-            "model_name": "dummy"
-        }
+        invalid_request = {"snapshots": [invalid_snapshot], "model_name": "dummy"}
 
         response = self.client.post("/predict", json=invalid_request)
 
@@ -294,14 +280,16 @@ class TestAPIRateLimiting(unittest.TestCase):
         self.client = TestClient(app)
 
         self.valid_request = {
-            "snapshots": [{
-                "timestamp": 1000,
-                "exchange": "binance",
-                "symbol": "BTCUSDT",
-                "bids": [[50000.0, 1.5]],
-                "asks": [[50001.0, 1.2]]
-            }],
-            "model_name": "dummy"
+            "snapshots": [
+                {
+                    "timestamp": 1000,
+                    "exchange": "binance",
+                    "symbol": "BTCUSDT",
+                    "bids": [[50000.0, 1.5]],
+                    "asks": [[50001.0, 1.2]],
+                }
+            ],
+            "model_name": "dummy",
         }
 
     def test_rate_limit_enforcement(self):
@@ -315,12 +303,14 @@ class TestAPIRateLimiting(unittest.TestCase):
 
         # First 10 should succeed
         for i in range(10):
-            self.assertEqual(responses[i].status_code, 200,
-                           f"Request {i+1} should succeed")
+            self.assertEqual(
+                responses[i].status_code, 200, f"Request {i+1} should succeed"
+            )
 
         # 11th should be rate limited
-        self.assertEqual(responses[10].status_code, 429,
-                        "Request 11 should be rate limited")
+        self.assertEqual(
+            responses[10].status_code, 429, "Request 11 should be rate limited"
+        )
 
 
 class TestAPIMetricsEndpoint(unittest.TestCase):
@@ -332,14 +322,16 @@ class TestAPIMetricsEndpoint(unittest.TestCase):
         metrics_collector.reset()
 
         self.valid_request = {
-            "snapshots": [{
-                "timestamp": 1000,
-                "exchange": "binance",
-                "symbol": "BTCUSDT",
-                "bids": [[50000.0, 1.5]],
-                "asks": [[50001.0, 1.2]]
-            }],
-            "model_name": "dummy"
+            "snapshots": [
+                {
+                    "timestamp": 1000,
+                    "exchange": "binance",
+                    "symbol": "BTCUSDT",
+                    "bids": [[50000.0, 1.5]],
+                    "asks": [[50001.0, 1.2]],
+                }
+            ],
+            "model_name": "dummy",
         }
 
     def test_metrics_endpoint_structure(self):
@@ -438,14 +430,16 @@ class TestAPIPerformance(unittest.TestCase):
         self.client = TestClient(app)
 
         self.valid_request = {
-            "snapshots": [{
-                "timestamp": 1000,
-                "exchange": "binance",
-                "symbol": "BTCUSDT",
-                "bids": [[50000.0, 1.5]],
-                "asks": [[50001.0, 1.2]]
-            }],
-            "model_name": "dummy"
+            "snapshots": [
+                {
+                    "timestamp": 1000,
+                    "exchange": "binance",
+                    "symbol": "BTCUSDT",
+                    "bids": [[50000.0, 1.5]],
+                    "asks": [[50001.0, 1.2]],
+                }
+            ],
+            "model_name": "dummy",
         }
 
     def test_prediction_latency_under_threshold(self):
@@ -456,8 +450,11 @@ class TestAPIPerformance(unittest.TestCase):
         data = response.json()
 
         # Should be under 100ms for small request
-        self.assertLess(data["latency_ms"], 100,
-                       f"Latency {data['latency_ms']}ms exceeds 100ms threshold")
+        self.assertLess(
+            data["latency_ms"],
+            100,
+            f"Latency {data['latency_ms']}ms exceeds 100ms threshold",
+        )
 
     def test_throughput_capacity(self):
         """Test API can handle multiple rapid requests."""
@@ -473,8 +470,11 @@ class TestAPIPerformance(unittest.TestCase):
 
         # All should succeed
         success_count = sum(1 for r in responses if r.status_code == 200)
-        self.assertGreaterEqual(success_count, 40,  # Allow some for rate limiting
-                              f"Only {success_count}/{num_requests} succeeded")
+        self.assertGreaterEqual(
+            success_count,
+            40,  # Allow some for rate limiting
+            f"Only {success_count}/{num_requests} succeeded",
+        )
 
         # Calculate throughput
         throughput = num_requests / elapsed
@@ -495,8 +495,9 @@ class TestAPIPerformance(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Should complete within 5 seconds (timeout threshold)
-        self.assertLess(elapsed, 5000,
-                       f"Large request took {elapsed}ms (> 5000ms threshold)")
+        self.assertLess(
+            elapsed, 5000, f"Large request took {elapsed}ms (> 5000ms threshold)"
+        )
 
 
 class TestAPIErrorHandling(unittest.TestCase):
@@ -511,7 +512,7 @@ class TestAPIErrorHandling(unittest.TestCase):
         response = self.client.post(
             "/predict",
             data="invalid json{{{",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         self.assertEqual(response.status_code, 422)
@@ -531,7 +532,7 @@ class TestAPIErrorHandling(unittest.TestCase):
         """Test that wrong data types are rejected."""
         wrong_types = {
             "snapshots": "not a list",  # Should be list
-            "model_name": 123  # Should be string
+            "model_name": 123,  # Should be string
         }
 
         response = self.client.post("/predict", json=wrong_types)
@@ -583,19 +584,21 @@ def test_api_benchmark():
     client = TestClient(app)
 
     request = {
-        "snapshots": [{
-            "timestamp": 1000,
-            "exchange": "binance",
-            "symbol": "BTCUSDT",
-            "bids": [[50000.0, 1.5]],
-            "asks": [[50001.0, 1.2]]
-        }],
-        "model_name": "dummy"
+        "snapshots": [
+            {
+                "timestamp": 1000,
+                "exchange": "binance",
+                "symbol": "BTCUSDT",
+                "bids": [[50000.0, 1.5]],
+                "asks": [[50001.0, 1.2]],
+            }
+        ],
+        "model_name": "dummy",
     }
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("API Performance Benchmark")
-    print("="*80)
+    print("=" * 80)
 
     # Warmup
     for _ in range(10):
@@ -613,6 +616,7 @@ def test_api_benchmark():
         assert response.status_code == 200
 
     import numpy as np
+
     latencies = np.array(latencies)
 
     print(f"\nRequests: {num_requests}")
@@ -623,7 +627,7 @@ def test_api_benchmark():
     print(f"Min Latency: {np.min(latencies):.2f}ms")
     print(f"Max Latency: {np.max(latencies):.2f}ms")
     print(f"Throughput: {num_requests / (sum(latencies)/1000):.1f} req/sec")
-    print("="*80)
+    print("=" * 80)
 
 
 if __name__ == "__main__":

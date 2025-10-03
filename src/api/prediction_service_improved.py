@@ -34,8 +34,7 @@ from slowapi.errors import RateLimitExceeded
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ app = FastAPI(
     description="Production-ready API for high-frequency trading predictions with security and monitoring",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Rate limiting
@@ -66,6 +65,7 @@ app.add_middleware(
 # ============================================================================
 # Metrics Collection
 # ============================================================================
+
 
 class MetricsCollector:
     """Collects and aggregates API metrics."""
@@ -116,12 +116,16 @@ class MetricsCollector:
                 avg_latency = p50_latency = p95_latency = p99_latency = 0.0
 
             cache_total = self.cache_hits + self.cache_misses
-            cache_hit_rate = (self.cache_hits / cache_total * 100) if cache_total > 0 else 0.0
+            cache_hit_rate = (
+                (self.cache_hits / cache_total * 100) if cache_total > 0 else 0.0
+            )
 
             return {
                 "uptime_seconds": uptime_seconds,
                 "total_predictions": self.total_predictions,
-                "predictions_per_second": self.total_predictions / uptime_seconds if uptime_seconds > 0 else 0,
+                "predictions_per_second": (
+                    self.total_predictions / uptime_seconds if uptime_seconds > 0 else 0
+                ),
                 "latency_ms": {
                     "avg": avg_latency,
                     "p50": p50_latency,
@@ -158,6 +162,7 @@ metrics_collector = MetricsCollector()
 # Request/Response Models with Validation
 # ============================================================================
 
+
 class OrderBookSnapshot(BaseModel):
     """Order book snapshot with validation."""
 
@@ -168,7 +173,7 @@ class OrderBookSnapshot(BaseModel):
     asks: List[List[float]] = Field(..., min_items=1, max_items=100)
     sequence: Optional[int] = Field(None, ge=0)
 
-    @validator('bids', 'asks')
+    @validator("bids", "asks")
     def validate_price_levels(cls, v):
         """Validate price levels have correct structure."""
         for level in v:
@@ -181,19 +186,19 @@ class OrderBookSnapshot(BaseModel):
                 raise ValueError(f"Volume must be non-negative, got {volume}")
         return v
 
-    @validator('bids')
+    @validator("bids")
     def validate_bids_descending(cls, v):
         """Validate bids are in descending price order."""
         prices = [level[0] for level in v]
-        if not all(prices[i] >= prices[i+1] for i in range(len(prices)-1)):
+        if not all(prices[i] >= prices[i + 1] for i in range(len(prices) - 1)):
             raise ValueError("Bid prices must be in descending order")
         return v
 
-    @validator('asks')
+    @validator("asks")
     def validate_asks_ascending(cls, v):
         """Validate asks are in ascending price order."""
         prices = [level[0] for level in v]
-        if not all(prices[i] <= prices[i+1] for i in range(len(prices)-1)):
+        if not all(prices[i] <= prices[i + 1] for i in range(len(prices) - 1)):
             raise ValueError("Ask prices must be in ascending order")
         return v
 
@@ -205,38 +210,45 @@ class PredictionRequest(BaseModel):
         ...,
         min_items=1,
         max_items=1000,
-        description="List of order book snapshots (max 1000 for safety)"
+        description="List of order book snapshots (max 1000 for safety)",
     )
     model_name: str = Field(
         default="lstm_v1",
         regex="^[a-zA-Z0-9_-]+$",
         max_length=50,
-        description="Model name (alphanumeric, underscore, hyphen only)"
+        description="Model name (alphanumeric, underscore, hyphen only)",
     )
     include_features: bool = Field(
-        default=False,
-        description="Whether to include computed features in response"
+        default=False, description="Whether to include computed features in response"
     )
 
-    @validator('snapshots')
+    @validator("snapshots")
     def validate_snapshots_not_empty(cls, v):
         """Ensure snapshots list is not empty."""
         if len(v) == 0:
             raise ValueError("snapshots cannot be empty")
         return v
 
-    @validator('snapshots')
+    @validator("snapshots")
     def validate_snapshots_temporal_order(cls, v):
         """Ensure snapshots are in temporal order."""
         timestamps = [s.timestamp for s in v]
-        if not all(timestamps[i] <= timestamps[i+1] for i in range(len(timestamps)-1)):
+        if not all(
+            timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1)
+        ):
             logger.warning("Snapshots not in temporal order, will be sorted")
         return v
 
-    @validator('model_name')
+    @validator("model_name")
     def validate_model_name_allowed(cls, v):
         """Validate model name is in allowed list."""
-        allowed_models = {"lstm_v1", "transformer_v1", "attention_lstm_v1", "ensemble_v1", "dummy"}
+        allowed_models = {
+            "lstm_v1",
+            "transformer_v1",
+            "attention_lstm_v1",
+            "ensemble_v1",
+            "dummy",
+        }
         if v not in allowed_models:
             raise ValueError(
                 f"Invalid model name '{v}'. Allowed models: {', '.join(sorted(allowed_models))}"
@@ -247,14 +259,20 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     """Prediction response."""
 
-    prediction: str = Field(..., description="Predicted direction: 'up', 'down', or 'flat'")
+    prediction: str = Field(
+        ..., description="Predicted direction: 'up', 'down', or 'flat'"
+    )
     probabilities: Dict[str, float] = Field(..., description="Class probabilities")
     confidence: float = Field(..., ge=0, le=1, description="Prediction confidence")
     model_name: str = Field(..., description="Model used for prediction")
-    latency_ms: float = Field(..., ge=0, description="Prediction latency in milliseconds")
+    latency_ms: float = Field(
+        ..., ge=0, description="Prediction latency in milliseconds"
+    )
     cache_hit: bool = Field(..., description="Whether result was from cache")
     timestamp: str = Field(..., description="Prediction timestamp (ISO format)")
-    features: Optional[Dict] = Field(None, description="Computed features (if requested)")
+    features: Optional[Dict] = Field(
+        None, description="Computed features (if requested)"
+    )
 
 
 class HealthResponse(BaseModel):
@@ -283,15 +301,16 @@ class MetricsResponse(BaseModel):
 # Timeout Decorator
 # ============================================================================
 
+
 def with_timeout(timeout_sec: float):
     """Decorator to add timeout to async functions."""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             try:
                 return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=timeout_sec
+                    func(*args, **kwargs), timeout=timeout_sec
                 )
             except asyncio.TimeoutError:
                 logger.error(f"Request timeout after {timeout_sec}s in {func.__name__}")
@@ -300,16 +319,19 @@ def with_timeout(timeout_sec: float):
                     detail={
                         "error": "request_timeout",
                         "message": f"Request timed out after {timeout_sec} seconds",
-                        "hint": "Try reducing the number of snapshots or use a faster model"
-                    }
+                        "hint": "Try reducing the number of snapshots or use a faster model",
+                    },
                 )
+
         return wrapper
+
     return decorator
 
 
 # ============================================================================
 # Cache Implementation
 # ============================================================================
+
 
 class SimpleCache:
     """Simple in-memory cache with TTL."""
@@ -358,6 +380,7 @@ prediction_cache = SimpleCache(ttl_seconds=60)
 # Dummy Model (for demonstration)
 # ============================================================================
 
+
 class DummyModel:
     """Dummy model for testing."""
 
@@ -377,6 +400,7 @@ class DummyModel:
 # Application State
 # ============================================================================
 
+
 class ApplicationState:
     """Application state management."""
 
@@ -389,7 +413,7 @@ class ApplicationState:
         logger.info("Loading models...")
 
         # Load dummy model (replace with real models in production)
-        self.models['dummy'] = DummyModel()
+        self.models["dummy"] = DummyModel()
 
         # TODO: Load real models
         # self.models['lstm_v1'] = load_lstm_model('models/lstm_v1.pth')
@@ -410,6 +434,7 @@ state = ApplicationState()
 # Startup/Shutdown Events
 # ============================================================================
 
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize application on startup."""
@@ -428,6 +453,7 @@ async def shutdown_event():
 # API Endpoints
 # ============================================================================
 
+
 @app.get("/", response_model=Dict)
 async def root():
     """Root endpoint with API information."""
@@ -439,8 +465,8 @@ async def root():
             "docs": "/docs",
             "health": "/health",
             "predict": "/predict",
-            "metrics": "/metrics"
-        }
+            "metrics": "/metrics",
+        },
     }
 
 
@@ -456,7 +482,7 @@ async def health_check():
         timestamp=datetime.utcnow().isoformat(),
         version="2.0.0",
         models_loaded=list(state.models.keys()),
-        uptime_seconds=state.get_uptime()
+        uptime_seconds=state.get_uptime(),
     )
 
 
@@ -465,11 +491,7 @@ async def list_models():
     """List available models."""
     return {
         "models": [
-            {
-                "name": name,
-                "type": type(model).__name__,
-                "loaded": True
-            }
+            {"name": name, "type": type(model).__name__, "loaded": True}
             for name, model in state.models.items()
         ]
     }
@@ -507,24 +529,32 @@ async def predict(request: Request, pred_request: PredictionRequest):
 
     # Generate cache key
     cache_key = hashlib.md5(
-        json.dumps({
-            "model": pred_request.model_name,
-            "snapshots": [s.dict() for s in pred_request.snapshots[:10]]  # Use first 10 for key
-        }, sort_keys=True).encode()
+        json.dumps(
+            {
+                "model": pred_request.model_name,
+                "snapshots": [
+                    s.dict() for s in pred_request.snapshots[:10]
+                ],  # Use first 10 for key
+            },
+            sort_keys=True,
+        ).encode()
     ).hexdigest()
 
     # Check cache
     cached_result = prediction_cache.get(cache_key)
     if cached_result:
         latency_ms = (time.time() - start_time) * 1000
-        cached_result['latency_ms'] = latency_ms
-        cached_result['cache_hit'] = True
+        cached_result["latency_ms"] = latency_ms
+        cached_result["cache_hit"] = True
         metrics_collector.record_prediction(latency_ms, True, pred_request.model_name)
         logger.info(f"Cache hit for request (latency: {latency_ms:.2f}ms)")
         return PredictionResponse(**cached_result)
 
     # Check if model exists
-    if pred_request.model_name not in state.models and pred_request.model_name != "dummy":
+    if (
+        pred_request.model_name not in state.models
+        and pred_request.model_name != "dummy"
+    ):
         available_models = list(state.models.keys()) + ["dummy"]
         metrics_collector.record_error("model_not_found")
         raise HTTPException(
@@ -533,21 +563,25 @@ async def predict(request: Request, pred_request: PredictionRequest):
                 "error": "model_not_found",
                 "message": f"Model '{pred_request.model_name}' not found",
                 "available_models": available_models,
-                "hint": "Check /models endpoint for available models"
-            }
+                "hint": "Check /models endpoint for available models",
+            },
         )
 
     # Get model
-    model = state.models.get(pred_request.model_name) or state.models.get('dummy')
+    model = state.models.get(pred_request.model_name) or state.models.get("dummy")
 
     # Make prediction (dummy implementation)
     try:
-        prediction_idx, probabilities = model.predict(np.zeros((len(pred_request.snapshots), 16)))
+        prediction_idx, probabilities = model.predict(
+            np.zeros((len(pred_request.snapshots), 16))
+        )
 
         # Convert to response format
-        class_names = ['down', 'flat', 'up']
+        class_names = ["down", "flat", "up"]
         prediction = class_names[prediction_idx]
-        prob_dict = {name: float(prob) for name, prob in zip(class_names, probabilities)}
+        prob_dict = {
+            name: float(prob) for name, prob in zip(class_names, probabilities)
+        }
         confidence = float(max(probabilities))
 
         latency_ms = (time.time() - start_time) * 1000
@@ -560,7 +594,7 @@ async def predict(request: Request, pred_request: PredictionRequest):
             "latency_ms": latency_ms,
             "cache_hit": False,
             "timestamp": datetime.utcnow().isoformat(),
-            "features": None
+            "features": None,
         }
 
         # Cache result
@@ -584,8 +618,8 @@ async def predict(request: Request, pred_request: PredictionRequest):
             detail={
                 "error": "prediction_error",
                 "message": "Internal error during prediction",
-                "hint": "Please contact support if this persists"
-            }
+                "hint": "Please contact support if this persists",
+            },
         )
 
 
@@ -615,6 +649,7 @@ async def reset_metrics():
 # Error Handlers
 # ============================================================================
 
+
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
     """Handle ValueError with helpful message."""
@@ -625,8 +660,8 @@ async def value_error_handler(request: Request, exc: ValueError):
         content={
             "error": "validation_error",
             "message": str(exc),
-            "hint": "Check your request data format"
-        }
+            "hint": "Check your request data format",
+        },
     )
 
 
@@ -644,5 +679,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True,
-        log_level="info"
+        log_level="info",
     )

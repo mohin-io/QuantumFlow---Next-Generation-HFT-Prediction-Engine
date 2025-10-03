@@ -64,7 +64,7 @@ class OrderFlowImbalanceCalculator:
         self,
         levels: List[int] = [1, 5, 10],
         window_sizes: List[int] = [10, 50, 100],
-        use_price_levels: bool = False
+        use_price_levels: bool = False,
     ):
         """
         Initialize OFI calculator.
@@ -84,16 +84,13 @@ class OrderFlowImbalanceCalculator:
         # Rolling windows for OFI values
         self.ofi_windows = {
             level: {
-                window_size: deque(maxlen=window_size)
-                for window_size in window_sizes
+                window_size: deque(maxlen=window_size) for window_size in window_sizes
             }
             for level in levels
         }
 
     def compute_ofi(
-        self,
-        current_state: OrderBookState,
-        num_levels: int = 10
+        self, current_state: OrderBookState, num_levels: int = 10
     ) -> Dict[str, float]:
         """
         Compute Order Flow Imbalance for the current state.
@@ -137,7 +134,7 @@ class OrderFlowImbalanceCalculator:
                     ofi -= delta_ask
 
             # Store OFI for this level
-            ofi_values[f'ofi_L{max_level}'] = ofi
+            ofi_values[f"ofi_L{max_level}"] = ofi
 
             # Update rolling windows
             for window_size in self.window_sizes:
@@ -146,9 +143,15 @@ class OrderFlowImbalanceCalculator:
                 # Compute rolling statistics
                 window_data = list(self.ofi_windows[max_level][window_size])
                 if len(window_data) > 0:
-                    ofi_values[f'ofi_L{max_level}_mean_{window_size}'] = np.mean(window_data)
-                    ofi_values[f'ofi_L{max_level}_std_{window_size}'] = np.std(window_data)
-                    ofi_values[f'ofi_L{max_level}_sum_{window_size}'] = np.sum(window_data)
+                    ofi_values[f"ofi_L{max_level}_mean_{window_size}"] = np.mean(
+                        window_data
+                    )
+                    ofi_values[f"ofi_L{max_level}_std_{window_size}"] = np.std(
+                        window_data
+                    )
+                    ofi_values[f"ofi_L{max_level}_sum_{window_size}"] = np.sum(
+                        window_data
+                    )
 
         # Update previous state
         self.prev_state = current_state
@@ -156,9 +159,7 @@ class OrderFlowImbalanceCalculator:
         return ofi_values
 
     def compute_signed_ofi(
-        self,
-        current_state: OrderBookState,
-        num_levels: int = 10
+        self, current_state: OrderBookState, num_levels: int = 10
     ) -> Dict[str, float]:
         """
         Compute signed OFI that accounts for price level changes.
@@ -209,9 +210,9 @@ class OrderFlowImbalanceCalculator:
 
             # Net OFI
             net_ofi = bid_ofi - ask_ofi
-            ofi_values[f'signed_ofi_L{max_level}'] = net_ofi
-            ofi_values[f'bid_ofi_L{max_level}'] = bid_ofi
-            ofi_values[f'ask_ofi_L{max_level}'] = ask_ofi
+            ofi_values[f"signed_ofi_L{max_level}"] = net_ofi
+            ofi_values[f"bid_ofi_L{max_level}"] = bid_ofi
+            ofi_values[f"ask_ofi_L{max_level}"] = ask_ofi
 
         self.prev_state = current_state
         return ofi_values
@@ -220,11 +221,11 @@ class OrderFlowImbalanceCalculator:
         """Initialize OFI dictionary with zeros."""
         ofi_dict = {}
         for level in self.levels:
-            ofi_dict[f'ofi_L{level}'] = 0.0
+            ofi_dict[f"ofi_L{level}"] = 0.0
             for window_size in self.window_sizes:
-                ofi_dict[f'ofi_L{level}_mean_{window_size}'] = 0.0
-                ofi_dict[f'ofi_L{level}_std_{window_size}'] = 0.0
-                ofi_dict[f'ofi_L{level}_sum_{window_size}'] = 0.0
+                ofi_dict[f"ofi_L{level}_mean_{window_size}"] = 0.0
+                ofi_dict[f"ofi_L{level}_std_{window_size}"] = 0.0
+                ofi_dict[f"ofi_L{level}_sum_{window_size}"] = 0.0
         return ofi_dict
 
     def reset(self):
@@ -238,7 +239,7 @@ class OrderFlowImbalanceCalculator:
 def compute_ofi_from_dataframe(
     df: pd.DataFrame,
     levels: List[int] = [1, 5, 10],
-    window_sizes: List[int] = [10, 50, 100]
+    window_sizes: List[int] = [10, 50, 100],
 ) -> pd.DataFrame:
     """
     Compute OFI features from a DataFrame of order book snapshots.
@@ -257,14 +258,14 @@ def compute_ofi_from_dataframe(
 
     for idx, row in df.iterrows():
         # Convert bids and asks to list of tuples
-        bids = [(b[0], b[1]) for b in row['bids']] if isinstance(row['bids'], list) else []
-        asks = [(a[0], a[1]) for a in row['asks']] if isinstance(row['asks'], list) else []
-
-        state = OrderBookState(
-            timestamp=row['timestamp'],
-            bids=bids,
-            asks=asks
+        bids = (
+            [(b[0], b[1]) for b in row["bids"]] if isinstance(row["bids"], list) else []
         )
+        asks = (
+            [(a[0], a[1]) for a in row["asks"]] if isinstance(row["asks"], list) else []
+        )
+
+        state = OrderBookState(timestamp=row["timestamp"], bids=bids, asks=asks)
 
         ofi_vals = calculator.compute_ofi(state)
         ofi_features.append(ofi_vals)
@@ -302,30 +303,28 @@ if __name__ == "__main__":
             bids.append([bid_price, bid_volume])
             asks.append([ask_price, ask_volume])
 
-        snapshots.append({
-            'timestamp': i,
-            'bids': bids,
-            'asks': asks
-        })
+        snapshots.append({"timestamp": i, "bids": bids, "asks": asks})
 
     # Create DataFrame
     df = pd.DataFrame(snapshots)
 
     # Compute OFI features
     print("Computing Order Flow Imbalance features...")
-    df_with_ofi = compute_ofi_from_dataframe(df, levels=[1, 5, 10], window_sizes=[10, 50])
+    df_with_ofi = compute_ofi_from_dataframe(
+        df, levels=[1, 5, 10], window_sizes=[10, 50]
+    )
 
     # Display results
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Order Flow Imbalance Features (first 10 rows)")
-    print("="*80)
+    print("=" * 80)
 
-    ofi_columns = [col for col in df_with_ofi.columns if 'ofi' in col]
-    print(df_with_ofi[['timestamp'] + ofi_columns[:8]].head(10))
+    ofi_columns = [col for col in df_with_ofi.columns if "ofi" in col]
+    print(df_with_ofi[["timestamp"] + ofi_columns[:8]].head(10))
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("OFI Statistics")
-    print("="*80)
+    print("=" * 80)
     print(df_with_ofi[ofi_columns].describe())
 
     # Visualize OFI if matplotlib available
@@ -334,32 +333,46 @@ if __name__ == "__main__":
 
         fig, axes = plt.subplots(3, 1, figsize=(14, 10))
 
-        axes[0].plot(df_with_ofi['timestamp'], df_with_ofi['ofi_L1'], label='OFI L1', alpha=0.7)
-        axes[0].axhline(y=0, color='r', linestyle='--', alpha=0.3)
-        axes[0].set_title('Order Flow Imbalance - Level 1')
-        axes[0].set_xlabel('Tick')
-        axes[0].set_ylabel('OFI')
+        axes[0].plot(
+            df_with_ofi["timestamp"], df_with_ofi["ofi_L1"], label="OFI L1", alpha=0.7
+        )
+        axes[0].axhline(y=0, color="r", linestyle="--", alpha=0.3)
+        axes[0].set_title("Order Flow Imbalance - Level 1")
+        axes[0].set_xlabel("Tick")
+        axes[0].set_ylabel("OFI")
         axes[0].legend()
         axes[0].grid(alpha=0.3)
 
-        axes[1].plot(df_with_ofi['timestamp'], df_with_ofi['ofi_L5'], label='OFI L5', alpha=0.7, color='orange')
-        axes[1].axhline(y=0, color='r', linestyle='--', alpha=0.3)
-        axes[1].set_title('Order Flow Imbalance - Level 5')
-        axes[1].set_xlabel('Tick')
-        axes[1].set_ylabel('OFI')
+        axes[1].plot(
+            df_with_ofi["timestamp"],
+            df_with_ofi["ofi_L5"],
+            label="OFI L5",
+            alpha=0.7,
+            color="orange",
+        )
+        axes[1].axhline(y=0, color="r", linestyle="--", alpha=0.3)
+        axes[1].set_title("Order Flow Imbalance - Level 5")
+        axes[1].set_xlabel("Tick")
+        axes[1].set_ylabel("OFI")
         axes[1].legend()
         axes[1].grid(alpha=0.3)
 
-        axes[2].plot(df_with_ofi['timestamp'], df_with_ofi['ofi_L10'], label='OFI L10', alpha=0.7, color='green')
-        axes[2].axhline(y=0, color='r', linestyle='--', alpha=0.3)
-        axes[2].set_title('Order Flow Imbalance - Level 10')
-        axes[2].set_xlabel('Tick')
-        axes[2].set_ylabel('OFI')
+        axes[2].plot(
+            df_with_ofi["timestamp"],
+            df_with_ofi["ofi_L10"],
+            label="OFI L10",
+            alpha=0.7,
+            color="green",
+        )
+        axes[2].axhline(y=0, color="r", linestyle="--", alpha=0.3)
+        axes[2].set_title("Order Flow Imbalance - Level 10")
+        axes[2].set_xlabel("Tick")
+        axes[2].set_ylabel("OFI")
         axes[2].legend()
         axes[2].grid(alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig('data/simulations/ofi_example.png', dpi=150)
+        plt.savefig("data/simulations/ofi_example.png", dpi=150)
         print("\nVisualization saved to: data/simulations/ofi_example.png")
 
     except ImportError:

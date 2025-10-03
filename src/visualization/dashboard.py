@@ -22,7 +22,7 @@ st.set_page_config(
     page_title="HFT Order Book Dashboard",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # Title
@@ -34,23 +34,25 @@ with st.sidebar:
     st.header("⚙️ Settings")
 
     # Data source selection
-    exchange = st.selectbox(
-        "Exchange",
-        ["Binance", "Coinbase", "LOBSTER (NASDAQ)"]
-    )
+    exchange = st.selectbox("Exchange", ["Binance", "Coinbase", "LOBSTER (NASDAQ)"])
 
     symbol = st.selectbox(
         "Symbol",
-        ["BTCUSDT", "ETHUSDT", "BNBUSDT"] if exchange == "Binance"
-        else ["BTC-USD", "ETH-USD"] if exchange == "Coinbase"
-        else ["AAPL", "MSFT", "GOOGL"]
+        (
+            ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+            if exchange == "Binance"
+            else (
+                ["BTC-USD", "ETH-USD"]
+                if exchange == "Coinbase"
+                else ["AAPL", "MSFT", "GOOGL"]
+            )
+        ),
     )
 
     # Model selection
     st.subheader("Model Settings")
     model_name = st.selectbox(
-        "Model",
-        ["LSTM", "Attention LSTM", "Transformer", "Ensemble"]
+        "Model", ["LSTM", "Attention LSTM", "Transformer", "Ensemble"]
     )
 
     # Update frequency
@@ -61,9 +63,9 @@ with st.sidebar:
     st.markdown(f"**API:** {api_url}")
 
 # Main content tabs
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Order Book", "🤖 Predictions", "📈 Performance", "🔍 Features"
-])
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["📊 Order Book", "🤖 Predictions", "📈 Performance", "🔍 Features"]
+)
 
 # Tab 1: Order Book Visualization
 with tab1:
@@ -102,33 +104,37 @@ with tab1:
         bid_prices = [b[0] for b in bids]
         bid_vols = [b[1] for b in bids]
 
-        fig.add_trace(go.Bar(
-            x=bid_vols,
-            y=bid_prices,
-            orientation='h',
-            name='Bids',
-            marker=dict(color='green', opacity=0.7)
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=bid_vols,
+                y=bid_prices,
+                orientation="h",
+                name="Bids",
+                marker=dict(color="green", opacity=0.7),
+            )
+        )
 
         # Ask side (red)
         ask_prices = [a[0] for a in asks]
         ask_vols = [-a[1] for a in asks]  # Negative for left side
 
-        fig.add_trace(go.Bar(
-            x=ask_vols,
-            y=ask_prices,
-            orientation='h',
-            name='Asks',
-            marker=dict(color='red', opacity=0.7)
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=ask_vols,
+                y=ask_prices,
+                orientation="h",
+                name="Asks",
+                marker=dict(color="red", opacity=0.7),
+            )
+        )
 
         fig.update_layout(
             title="Order Book Depth",
             xaxis_title="Volume",
             yaxis_title="Price",
             height=500,
-            barmode='relative',
-            showlegend=True
+            barmode="relative",
+            showlegend=True,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -148,7 +154,9 @@ with tab1:
         # Volume imbalance
         total_bid_vol = sum(b[1] for b in bids)
         total_ask_vol = sum(a[1] for a in asks)
-        vol_imbalance = (total_bid_vol - total_ask_vol) / (total_bid_vol + total_ask_vol)
+        vol_imbalance = (total_bid_vol - total_ask_vol) / (
+            total_bid_vol + total_ask_vol
+        )
 
         st.metric("Volume Imbalance", f"{vol_imbalance:.3f}")
 
@@ -156,19 +164,13 @@ with tab1:
         st.subheader("Price History")
 
         # Generate sample price history
-        timestamps = pd.date_range(end=datetime.now(), periods=100, freq='1S')
+        timestamps = pd.date_range(end=datetime.now(), periods=100, freq="1S")
         prices = mid_price + np.cumsum(np.random.normal(0, 5, 100))
 
-        price_df = pd.DataFrame({
-            'timestamp': timestamps,
-            'price': prices
-        })
+        price_df = pd.DataFrame({"timestamp": timestamps, "price": prices})
 
         fig_price = px.line(
-            price_df,
-            x='timestamp',
-            y='price',
-            title='Mid-Price Evolution'
+            price_df, x="timestamp", y="price", title="Mid-Price Evolution"
         )
         fig_price.update_layout(height=300)
 
@@ -187,12 +189,12 @@ with tab2:
     probs = {
         "UP": 0.4 if prediction != "UP" else confidence,
         "FLAT": 0.3 if prediction != "FLAT" else confidence,
-        "DOWN": 0.3 if prediction != "DOWN" else confidence
+        "DOWN": 0.3 if prediction != "DOWN" else confidence,
     }
 
     # Normalize
     total = sum(probs.values())
-    probs = {k: v/total for k, v in probs.items()}
+    probs = {k: v / total for k, v in probs.items()}
 
     with col1:
         st.metric("Prediction", prediction)
@@ -207,18 +209,19 @@ with tab2:
     # Probability distribution
     st.subheader("Prediction Probabilities")
 
-    fig_probs = go.Figure(data=[
-        go.Bar(
-            x=list(probs.keys()),
-            y=list(probs.values()),
-            marker_color=['green' if k == 'UP' else 'gray' if k == 'FLAT' else 'red'
-                         for k in probs.keys()]
-        )
-    ])
-    fig_probs.update_layout(
-        yaxis_title="Probability",
-        height=300
+    fig_probs = go.Figure(
+        data=[
+            go.Bar(
+                x=list(probs.keys()),
+                y=list(probs.values()),
+                marker_color=[
+                    "green" if k == "UP" else "gray" if k == "FLAT" else "red"
+                    for k in probs.keys()
+                ],
+            )
+        ]
     )
+    fig_probs.update_layout(yaxis_title="Probability", height=300)
 
     st.plotly_chart(fig_probs, use_container_width=True)
 
@@ -226,12 +229,14 @@ with tab2:
     st.subheader("Prediction History")
 
     # Generate sample prediction history
-    pred_history = pd.DataFrame({
-        'timestamp': pd.date_range(end=datetime.now(), periods=50, freq='5S'),
-        'prediction': np.random.choice(["UP", "DOWN", "FLAT"], 50),
-        'confidence': np.random.uniform(0.5, 0.95, 50),
-        'actual': np.random.choice(["UP", "DOWN", "FLAT"], 50)
-    })
+    pred_history = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(end=datetime.now(), periods=50, freq="5S"),
+            "prediction": np.random.choice(["UP", "DOWN", "FLAT"], 50),
+            "confidence": np.random.uniform(0.5, 0.95, 50),
+            "actual": np.random.choice(["UP", "DOWN", "FLAT"], 50),
+        }
+    )
 
     st.dataframe(pred_history.tail(10), use_container_width=True)
 
@@ -250,16 +255,15 @@ with tab3:
         recall = np.random.uniform(0.50, 0.65)
         f1 = 2 * (precision * recall) / (precision + recall)
 
-        metrics_df = pd.DataFrame({
-            'Metric': ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
-            'Value': [accuracy, precision, recall, f1]
-        })
+        metrics_df = pd.DataFrame(
+            {
+                "Metric": ["Accuracy", "Precision", "Recall", "F1-Score"],
+                "Value": [accuracy, precision, recall, f1],
+            }
+        )
 
         fig_metrics = px.bar(
-            metrics_df,
-            x='Metric',
-            y='Value',
-            title='Classification Performance'
+            metrics_df, x="Metric", y="Value", title="Classification Performance"
         )
         fig_metrics.update_layout(yaxis_range=[0, 1])
 
@@ -273,10 +277,12 @@ with tab3:
         max_dd = np.random.uniform(-0.15, -0.05)
         win_rate = np.random.uniform(0.50, 0.65)
 
-        econ_df = pd.DataFrame({
-            'Metric': ['Sharpe Ratio', 'Max Drawdown', 'Win Rate'],
-            'Value': [sharpe, max_dd, win_rate]
-        })
+        econ_df = pd.DataFrame(
+            {
+                "Metric": ["Sharpe Ratio", "Max Drawdown", "Win Rate"],
+                "Value": [sharpe, max_dd, win_rate],
+            }
+        )
 
         st.dataframe(econ_df, use_container_width=True)
 
@@ -287,17 +293,14 @@ with tab3:
     returns = np.random.normal(0.0005, 0.01, 1000)
     cum_returns = np.cumprod(1 + returns)
 
-    pnl_df = pd.DataFrame({
-        'timestamp': pd.date_range(end=datetime.now(), periods=1000, freq='1min'),
-        'pnl': cum_returns
-    })
-
-    fig_pnl = px.line(
-        pnl_df,
-        x='timestamp',
-        y='pnl',
-        title='Cumulative Returns'
+    pnl_df = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(end=datetime.now(), periods=1000, freq="1min"),
+            "pnl": cum_returns,
+        }
     )
+
+    fig_pnl = px.line(pnl_df, x="timestamp", y="pnl", title="Cumulative Returns")
     st.plotly_chart(fig_pnl, use_container_width=True)
 
 # Tab 4: Features
@@ -308,23 +311,25 @@ with tab4:
     st.subheader("Feature Importance")
 
     features = [
-        'OFI_L1', 'OFI_L5', 'OFI_L10', 'Micro_Price_Dev',
-        'Volume_Imbalance', 'Spread_BPS', 'Realized_Vol_20',
-        'Depth_Imbalance', 'Liquidity_Conc'
+        "OFI_L1",
+        "OFI_L5",
+        "OFI_L10",
+        "Micro_Price_Dev",
+        "Volume_Imbalance",
+        "Spread_BPS",
+        "Realized_Vol_20",
+        "Depth_Imbalance",
+        "Liquidity_Conc",
     ]
     importance = np.random.uniform(0, 1, len(features))
     importance = importance / importance.sum()
 
-    feat_df = pd.DataFrame({
-        'Feature': features,
-        'Importance': importance
-    }).sort_values('Importance', ascending=False)
+    feat_df = pd.DataFrame({"Feature": features, "Importance": importance}).sort_values(
+        "Importance", ascending=False
+    )
 
     fig_feat = px.bar(
-        feat_df,
-        x='Feature',
-        y='Importance',
-        title='Feature Importance (SHAP Values)'
+        feat_df, x="Feature", y="Importance", title="Feature Importance (SHAP Values)"
     )
 
     st.plotly_chart(fig_feat, use_container_width=True)
@@ -343,18 +348,20 @@ with tab4:
         labels=dict(x="Feature", y="Feature", color="Correlation"),
         x=features[:n_features],
         y=features[:n_features],
-        color_continuous_scale='RdBu_r',
-        aspect="auto"
+        color_continuous_scale="RdBu_r",
+        aspect="auto",
     )
 
     st.plotly_chart(fig_corr, use_container_width=True)
 
 # Footer
 st.markdown("---")
-st.markdown("""
+st.markdown(
+    """
     **HFT Order Book Imbalance Forecasting** | Built with Streamlit, PyTorch, FastAPI
     | [GitHub](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
-""")
+"""
+)
 
 # Auto-refresh (optional)
 if st.button("🔄 Refresh Data"):

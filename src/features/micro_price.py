@@ -48,10 +48,7 @@ class MicroPriceCalculator:
 
     @staticmethod
     def compute_micro_price(
-        bid_price: float,
-        ask_price: float,
-        bid_volume: float,
-        ask_volume: float
+        bid_price: float, ask_price: float, bid_volume: float, ask_volume: float
     ) -> float:
         """
         Compute volume-weighted micro-price.
@@ -79,7 +76,7 @@ class MicroPriceCalculator:
         ask_price: float,
         bid_volume: float,
         ask_volume: float,
-        depth_levels: int = 3
+        depth_levels: int = 3,
     ) -> float:
         """
         Compute volume-weighted mid-price using multiple depth levels.
@@ -107,10 +104,16 @@ class MicroPriceCalculator:
         if total_bid_volume + total_ask_volume == 0:
             return (bid_price[0] + ask_price[0]) / 2
 
-        weighted_bid = sum(p * v for p, v in zip(bid_price[:depth_levels], bid_volume[:depth_levels]))
-        weighted_ask = sum(p * v for p, v in zip(ask_price[:depth_levels], ask_volume[:depth_levels]))
+        weighted_bid = sum(
+            p * v for p, v in zip(bid_price[:depth_levels], bid_volume[:depth_levels])
+        )
+        weighted_ask = sum(
+            p * v for p, v in zip(ask_price[:depth_levels], ask_volume[:depth_levels])
+        )
 
-        weighted_mid = (weighted_bid + weighted_ask) / (total_bid_volume + total_ask_volume)
+        weighted_mid = (weighted_bid + weighted_ask) / (
+            total_bid_volume + total_ask_volume
+        )
         return weighted_mid
 
     @staticmethod
@@ -119,7 +122,7 @@ class MicroPriceCalculator:
         ask_prices: List[float],
         bid_volumes: List[float],
         ask_volumes: List[float],
-        depth_levels: int = 5
+        depth_levels: int = 5,
     ) -> float:
         """
         Compute Volume-Weighted Average Price (VWAP) from order book.
@@ -153,7 +156,7 @@ class MicroPriceCalculator:
     def compute_all_metrics(
         bids: List[Tuple[float, float]],
         asks: List[Tuple[float, float]],
-        depth_levels: int = 3
+        depth_levels: int = 3,
     ) -> MicroPriceMetrics:
         """
         Compute all micro-price related metrics.
@@ -199,7 +202,7 @@ class MicroPriceCalculator:
             mid_price=mid_price,
             weighted_mid_price=weighted_mid,
             micro_price_deviation=deviation,
-            micro_price_bps_deviation=deviation_bps
+            micro_price_bps_deviation=deviation_bps,
         )
 
 
@@ -234,7 +237,9 @@ class AdaptiveFairValueEstimator:
         if self.fair_value is None:
             self.fair_value = micro_price
         else:
-            self.fair_value = self.alpha * micro_price + (1 - self.alpha) * self.fair_value
+            self.fair_value = (
+                self.alpha * micro_price + (1 - self.alpha) * self.fair_value
+            )
 
         return self.fair_value
 
@@ -247,7 +252,7 @@ def compute_micro_price_features(
     df: pd.DataFrame,
     depth_levels: int = 3,
     use_adaptive: bool = True,
-    alpha: float = 0.3
+    alpha: float = 0.3,
 ) -> pd.DataFrame:
     """
     Compute micro-price features from DataFrame of order book snapshots.
@@ -262,11 +267,13 @@ def compute_micro_price_features(
         DataFrame with micro-price features added
     """
     features = []
-    adaptive_estimator = AdaptiveFairValueEstimator(alpha=alpha) if use_adaptive else None
+    adaptive_estimator = (
+        AdaptiveFairValueEstimator(alpha=alpha) if use_adaptive else None
+    )
 
     for idx, row in df.iterrows():
-        bids = row['bids'] if isinstance(row['bids'], list) else []
-        asks = row['asks'] if isinstance(row['asks'], list) else []
+        bids = row["bids"] if isinstance(row["bids"], list) else []
+        asks = row["asks"] if isinstance(row["asks"], list) else []
 
         # Convert to tuples if needed
         if bids and not isinstance(bids[0], tuple):
@@ -278,21 +285,22 @@ def compute_micro_price_features(
         metrics = MicroPriceCalculator.compute_all_metrics(bids, asks, depth_levels)
 
         feature_dict = {
-            'micro_price': metrics.micro_price,
-            'mid_price': metrics.mid_price,
-            'weighted_mid_price': metrics.weighted_mid_price,
-            'micro_price_deviation': metrics.micro_price_deviation,
-            'micro_price_bps_deviation': metrics.micro_price_bps_deviation,
+            "micro_price": metrics.micro_price,
+            "mid_price": metrics.mid_price,
+            "weighted_mid_price": metrics.weighted_mid_price,
+            "micro_price_deviation": metrics.micro_price_deviation,
+            "micro_price_bps_deviation": metrics.micro_price_bps_deviation,
         }
 
         # Add adaptive fair value
         if use_adaptive and metrics.micro_price > 0:
             fair_value = adaptive_estimator.update(metrics.micro_price)
-            feature_dict['adaptive_fair_value'] = fair_value
-            feature_dict['price_vs_fair_value'] = metrics.micro_price - fair_value
-            feature_dict['price_vs_fair_value_bps'] = (
+            feature_dict["adaptive_fair_value"] = fair_value
+            feature_dict["price_vs_fair_value"] = metrics.micro_price - fair_value
+            feature_dict["price_vs_fair_value_bps"] = (
                 (metrics.micro_price - fair_value) / fair_value * 10000
-                if fair_value > 0 else 0
+                if fair_value > 0
+                else 0
             )
 
         features.append(feature_dict)
@@ -330,42 +338,46 @@ if __name__ == "__main__":
             bids.append([bid_price, bid_volume])
             asks.append([ask_price, ask_volume])
 
-        snapshots.append({
-            'timestamp': i,
-            'bids': bids,
-            'asks': asks
-        })
+        snapshots.append({"timestamp": i, "bids": bids, "asks": asks})
 
     df = pd.DataFrame(snapshots)
 
     # Compute micro-price features
     print("Computing micro-price features...")
-    df_with_features = compute_micro_price_features(df, depth_levels=3, use_adaptive=True)
+    df_with_features = compute_micro_price_features(
+        df, depth_levels=3, use_adaptive=True
+    )
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Micro-Price Features (first 10 rows)")
-    print("="*80)
+    print("=" * 80)
 
-    feature_cols = ['micro_price', 'mid_price', 'weighted_mid_price',
-                    'micro_price_deviation', 'adaptive_fair_value']
-    print(df_with_features[['timestamp'] + feature_cols].head(10))
+    feature_cols = [
+        "micro_price",
+        "mid_price",
+        "weighted_mid_price",
+        "micro_price_deviation",
+        "adaptive_fair_value",
+    ]
+    print(df_with_features[["timestamp"] + feature_cols].head(10))
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Feature Statistics")
-    print("="*80)
+    print("=" * 80)
     print(df_with_features[feature_cols].describe())
 
     # Analyze correlation between micro-price deviation and future price changes
-    df_with_features['future_mid_price'] = df_with_features['mid_price'].shift(-10)
-    df_with_features['future_return'] = (
-        (df_with_features['future_mid_price'] - df_with_features['mid_price']) /
-        df_with_features['mid_price']
-    )
+    df_with_features["future_mid_price"] = df_with_features["mid_price"].shift(-10)
+    df_with_features["future_return"] = (
+        df_with_features["future_mid_price"] - df_with_features["mid_price"]
+    ) / df_with_features["mid_price"]
 
-    correlation = df_with_features[['micro_price_bps_deviation', 'future_return']].corr()
-    print("\n" + "="*80)
+    correlation = df_with_features[
+        ["micro_price_bps_deviation", "future_return"]
+    ].corr()
+    print("\n" + "=" * 80)
     print("Predictive Power Analysis")
-    print("="*80)
+    print("=" * 80)
     print("Correlation between micro-price deviation and future returns:")
     print(correlation)
 
@@ -376,33 +388,57 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(2, 1, figsize=(14, 8))
 
         # Plot 1: Micro-price vs Mid-price
-        axes[0].plot(df_with_features['timestamp'], df_with_features['mid_price'],
-                     label='Mid Price', alpha=0.7, linewidth=1)
-        axes[0].plot(df_with_features['timestamp'], df_with_features['micro_price'],
-                     label='Micro Price', alpha=0.7, linewidth=1)
-        axes[0].plot(df_with_features['timestamp'], df_with_features['adaptive_fair_value'],
-                     label='Adaptive Fair Value', alpha=0.7, linewidth=1, linestyle='--')
-        axes[0].set_title('Price Comparison: Mid-Price vs Micro-Price vs Fair Value')
-        axes[0].set_xlabel('Tick')
-        axes[0].set_ylabel('Price')
+        axes[0].plot(
+            df_with_features["timestamp"],
+            df_with_features["mid_price"],
+            label="Mid Price",
+            alpha=0.7,
+            linewidth=1,
+        )
+        axes[0].plot(
+            df_with_features["timestamp"],
+            df_with_features["micro_price"],
+            label="Micro Price",
+            alpha=0.7,
+            linewidth=1,
+        )
+        axes[0].plot(
+            df_with_features["timestamp"],
+            df_with_features["adaptive_fair_value"],
+            label="Adaptive Fair Value",
+            alpha=0.7,
+            linewidth=1,
+            linestyle="--",
+        )
+        axes[0].set_title("Price Comparison: Mid-Price vs Micro-Price vs Fair Value")
+        axes[0].set_xlabel("Tick")
+        axes[0].set_ylabel("Price")
         axes[0].legend()
         axes[0].grid(alpha=0.3)
 
         # Plot 2: Micro-price deviation
-        axes[1].plot(df_with_features['timestamp'], df_with_features['micro_price_bps_deviation'],
-                     label='Micro-Price Deviation (bps)', alpha=0.7, color='orange')
-        axes[1].axhline(y=0, color='r', linestyle='--', alpha=0.3)
-        axes[1].fill_between(df_with_features['timestamp'],
-                             df_with_features['micro_price_bps_deviation'],
-                             0, alpha=0.3)
-        axes[1].set_title('Micro-Price Deviation from Mid-Price')
-        axes[1].set_xlabel('Tick')
-        axes[1].set_ylabel('Deviation (bps)')
+        axes[1].plot(
+            df_with_features["timestamp"],
+            df_with_features["micro_price_bps_deviation"],
+            label="Micro-Price Deviation (bps)",
+            alpha=0.7,
+            color="orange",
+        )
+        axes[1].axhline(y=0, color="r", linestyle="--", alpha=0.3)
+        axes[1].fill_between(
+            df_with_features["timestamp"],
+            df_with_features["micro_price_bps_deviation"],
+            0,
+            alpha=0.3,
+        )
+        axes[1].set_title("Micro-Price Deviation from Mid-Price")
+        axes[1].set_xlabel("Tick")
+        axes[1].set_ylabel("Deviation (bps)")
         axes[1].legend()
         axes[1].grid(alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig('data/simulations/micro_price_example.png', dpi=150)
+        plt.savefig("data/simulations/micro_price_example.png", dpi=150)
         print("\nVisualization saved to: data/simulations/micro_price_example.png")
 
     except ImportError:

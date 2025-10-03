@@ -24,6 +24,7 @@ from enum import Enum
 
 class Environment(str, Enum):
     """Application environment."""
+
     DEVELOPMENT = "development"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -31,6 +32,7 @@ class Environment(str, Enum):
 
 class LogLevel(str, Enum):
     """Logging levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -41,6 +43,7 @@ class LogLevel(str, Enum):
 # ============================================================================
 # Database Configurations
 # ============================================================================
+
 
 class DatabaseConfig(BaseModel):
     """PostgreSQL/TimescaleDB configuration."""
@@ -87,8 +90,12 @@ class RedisConfig(BaseModel):
     port: int = Field(default=6379, ge=1, le=65535, description="Redis port")
     db: int = Field(default=0, ge=0, le=15, description="Redis database number")
     password: Optional[SecretStr] = Field(None, description="Redis password")
-    max_connections: int = Field(default=50, ge=1, description="Max connections in pool")
-    socket_timeout: int = Field(default=5, ge=1, description="Socket timeout in seconds")
+    max_connections: int = Field(
+        default=50, ge=1, description="Max connections in pool"
+    )
+    socket_timeout: int = Field(
+        default=5, ge=1, description="Socket timeout in seconds"
+    )
     decode_responses: bool = Field(default=True, description="Decode responses to str")
 
     class Config:
@@ -99,33 +106,29 @@ class RedisConfig(BaseModel):
 # Streaming Configurations
 # ============================================================================
 
+
 class KafkaConfig(BaseModel):
     """Apache Kafka configuration."""
 
     bootstrap_servers: List[str] = Field(
-        default=["localhost:9092"],
-        description="Kafka bootstrap servers"
+        default=["localhost:9092"], description="Kafka bootstrap servers"
     )
     topic_orderbook: str = Field(
-        default="orderbook-updates",
-        description="Order book updates topic"
+        default="orderbook-updates", description="Order book updates topic"
     )
     topic_features: str = Field(
-        default="computed-features",
-        description="Computed features topic"
+        default="computed-features", description="Computed features topic"
     )
     topic_predictions: str = Field(
-        default="model-predictions",
-        description="Model predictions topic"
+        default="model-predictions", description="Model predictions topic"
     )
     consumer_group: str = Field(
-        default="hft-consumers",
-        description="Consumer group ID"
+        default="hft-consumers", description="Consumer group ID"
     )
     auto_offset_reset: str = Field(
         default="latest",
         regex="^(earliest|latest)$",
-        description="Auto offset reset strategy"
+        description="Auto offset reset strategy",
     )
 
     class Config:
@@ -136,20 +139,18 @@ class KafkaConfig(BaseModel):
 # Feature Engineering Configurations
 # ============================================================================
 
+
 class OFIConfig(BaseModel):
     """Order Flow Imbalance configuration."""
 
     levels: List[int] = Field(
-        default=[1, 5, 10],
-        description="Price levels for OFI calculation"
+        default=[1, 5, 10], description="Price levels for OFI calculation"
     )
     windows: List[int] = Field(
-        default=[10, 50, 100],
-        description="Rolling window sizes for OFI statistics"
+        default=[10, 50, 100], description="Rolling window sizes for OFI statistics"
     )
     enable_multi_level: bool = Field(
-        default=True,
-        description="Enable multi-level OFI computation"
+        default=True, description="Enable multi-level OFI computation"
     )
 
 
@@ -160,17 +161,16 @@ class MicroPriceConfig(BaseModel):
         default=3,
         ge=1,
         le=20,
-        description="Number of depth levels for weighted calculations"
+        description="Number of depth levels for weighted calculations",
     )
     use_adaptive: bool = Field(
-        default=True,
-        description="Use adaptive fair value estimator"
+        default=True, description="Use adaptive fair value estimator"
     )
     alpha: float = Field(
         default=0.3,
         ge=0.0,
         le=1.0,
-        description="Smoothing factor for adaptive estimator"
+        description="Smoothing factor for adaptive estimator",
     )
 
 
@@ -179,11 +179,10 @@ class VolatilityConfig(BaseModel):
 
     estimators: List[str] = Field(
         default=["simple", "parkinson", "garman_klass"],
-        description="Volatility estimators to use"
+        description="Volatility estimators to use",
     )
     windows: List[int] = Field(
-        default=[20, 50, 100],
-        description="Rolling windows for volatility"
+        default=[20, 50, 100], description="Rolling windows for volatility"
     )
 
 
@@ -201,6 +200,7 @@ class FeatureConfig(BaseModel):
 # ============================================================================
 # Model Configurations
 # ============================================================================
+
 
 class LSTMModelConfig(BaseModel):
     """LSTM model configuration."""
@@ -220,16 +220,20 @@ class TransformerModelConfig(BaseModel):
     input_size: int = Field(default=64, ge=1, description="Input feature size")
     d_model: int = Field(default=128, ge=1, description="Model dimension")
     nhead: int = Field(default=8, ge=1, description="Number of attention heads")
-    num_encoder_layers: int = Field(default=4, ge=1, le=12, description="Encoder layers")
+    num_encoder_layers: int = Field(
+        default=4, ge=1, le=12, description="Encoder layers"
+    )
     dim_feedforward: int = Field(default=512, ge=1, description="Feedforward dimension")
     dropout: float = Field(default=0.1, ge=0.0, le=0.5, description="Dropout rate")
     num_classes: int = Field(default=3, ge=2, description="Number of output classes")
 
-    @validator('d_model')
+    @validator("d_model")
     def d_model_divisible_by_nhead(cls, v, values):
         """Ensure d_model is divisible by nhead."""
-        if 'nhead' in values and v % values['nhead'] != 0:
-            raise ValueError(f"d_model ({v}) must be divisible by nhead ({values['nhead']})")
+        if "nhead" in values and v % values["nhead"] != 0:
+            raise ValueError(
+                f"d_model ({v}) must be divisible by nhead ({values['nhead']})"
+            )
         return v
 
 
@@ -238,20 +242,20 @@ class ModelConfig(BaseModel):
 
     name: str = Field(..., description="Model name")
     type: str = Field(
-        ...,
-        regex="^(lstm|transformer|bayesian|ensemble)$",
-        description="Model type"
+        ..., regex="^(lstm|transformer|bayesian|ensemble)$", description="Model type"
     )
-    checkpoint_path: Optional[Path] = Field(None, description="Path to model checkpoint")
+    checkpoint_path: Optional[Path] = Field(
+        None, description="Path to model checkpoint"
+    )
     device: str = Field(
         default="cuda",
         regex="^(cpu|cuda|cuda:[0-9]+)$",
-        description="Device for inference"
+        description="Device for inference",
     )
     lstm: Optional[LSTMModelConfig] = None
     transformer: Optional[TransformerModelConfig] = None
 
-    @validator('checkpoint_path')
+    @validator("checkpoint_path")
     def checkpoint_exists(cls, v):
         """Validate checkpoint exists if provided."""
         if v is not None and not v.exists():
@@ -263,6 +267,7 @@ class ModelConfig(BaseModel):
 # API Configurations
 # ============================================================================
 
+
 class APIConfig(BaseModel):
     """FastAPI service configuration."""
 
@@ -271,25 +276,14 @@ class APIConfig(BaseModel):
     workers: int = Field(default=4, ge=1, le=32, description="Number of workers")
     reload: bool = Field(default=False, description="Auto-reload on code changes")
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Log level")
-    cors_origins: List[str] = Field(
-        default=["*"],
-        description="Allowed CORS origins"
-    )
+    cors_origins: List[str] = Field(default=["*"], description="Allowed CORS origins")
     rate_limit: str = Field(
-        default="10/minute",
-        description="Rate limit (requests/period)"
+        default="10/minute", description="Rate limit (requests/period)"
     )
     request_timeout: int = Field(
-        default=5,
-        ge=1,
-        le=60,
-        description="Request timeout in seconds"
+        default=5, ge=1, le=60, description="Request timeout in seconds"
     )
-    cache_ttl: int = Field(
-        default=60,
-        ge=0,
-        description="Cache TTL in seconds"
-    )
+    cache_ttl: int = Field(default=60, ge=0, description="Cache TTL in seconds")
     enable_metrics: bool = Field(default=True, description="Enable metrics collection")
 
 
@@ -297,40 +291,27 @@ class APIConfig(BaseModel):
 # Backtesting Configurations
 # ============================================================================
 
+
 class BacktestConfig(BaseModel):
     """Backtesting configuration."""
 
     initial_capital: float = Field(
-        default=100000.0,
-        gt=0,
-        description="Initial capital"
+        default=100000.0, gt=0, description="Initial capital"
     )
     position_size: float = Field(
-        default=0.1,
-        gt=0,
-        le=1,
-        description="Position size as fraction of capital"
+        default=0.1, gt=0, le=1, description="Position size as fraction of capital"
     )
     transaction_cost_bps: float = Field(
-        default=5.0,
-        ge=0,
-        description="Transaction cost in basis points"
+        default=5.0, ge=0, description="Transaction cost in basis points"
     )
     slippage_bps: float = Field(
-        default=2.0,
-        ge=0,
-        description="Slippage in basis points"
+        default=2.0, ge=0, description="Slippage in basis points"
     )
     max_holding_period: int = Field(
-        default=100,
-        ge=1,
-        description="Maximum holding period in ticks"
+        default=100, ge=1, description="Maximum holding period in ticks"
     )
     confidence_threshold: float = Field(
-        default=0.6,
-        gt=0,
-        lt=1,
-        description="Minimum confidence for trade execution"
+        default=0.6, gt=0, lt=1, description="Minimum confidence for trade execution"
     )
 
 
@@ -338,13 +319,13 @@ class BacktestConfig(BaseModel):
 # Main Application Configuration
 # ============================================================================
 
+
 class AppConfig(BaseModel):
     """Main application configuration."""
 
     # Environment
     environment: Environment = Field(
-        default=Environment.DEVELOPMENT,
-        description="Application environment"
+        default=Environment.DEVELOPMENT, description="Application environment"
     )
     debug: bool = Field(default=False, description="Debug mode")
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Global log level")
@@ -361,7 +342,9 @@ class AppConfig(BaseModel):
 
     # Paths
     data_dir: Path = Field(default=Path("data"), description="Data directory")
-    models_dir: Path = Field(default=Path("models/saved"), description="Models directory")
+    models_dir: Path = Field(
+        default=Path("models/saved"), description="Models directory"
+    )
     logs_dir: Path = Field(default=Path("logs"), description="Logs directory")
 
     @classmethod
@@ -475,9 +458,11 @@ class AppConfig(BaseModel):
         output_path = Path(output_path)
 
         # Convert to dict, excluding secrets
-        config_dict = self.dict(exclude={"database": {"password"}, "redis": {"password"}})
+        config_dict = self.dict(
+            exclude={"database": {"password"}, "redis": {"password"}}
+        )
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
     def get_model_config(self, model_name: str) -> Optional[ModelConfig]:
@@ -492,9 +477,9 @@ class AppConfig(BaseModel):
 # Helper Functions
 # ============================================================================
 
+
 def load_config(
-    config_path: Optional[Union[str, Path]] = None,
-    environment: Optional[str] = None
+    config_path: Optional[Union[str, Path]] = None, environment: Optional[str] = None
 ) -> AppConfig:
     """
     Load application configuration.
@@ -540,10 +525,7 @@ if __name__ == "__main__":
         environment=Environment.DEVELOPMENT,
         debug=True,
         log_level=LogLevel.DEBUG,
-        api=APIConfig(
-            reload=True,
-            workers=1
-        )
+        api=APIConfig(reload=True, workers=1),
     )
     dev_config.to_yaml(configs_dir / "development.yaml")
     print("Created configs/development.yaml")
@@ -553,11 +535,7 @@ if __name__ == "__main__":
         environment=Environment.PRODUCTION,
         debug=False,
         log_level=LogLevel.INFO,
-        api=APIConfig(
-            reload=False,
-            workers=4,
-            cors_origins=["https://yourdomain.com"]
-        )
+        api=APIConfig(reload=False, workers=4, cors_origins=["https://yourdomain.com"]),
     )
     prod_config.to_yaml(configs_dir / "production.yaml")
     print("Created configs/production.yaml")

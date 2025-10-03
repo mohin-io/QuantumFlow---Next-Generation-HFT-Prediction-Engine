@@ -27,12 +27,14 @@ from loguru import logger
 # Pydantic models for request/response
 class OrderBookLevel(BaseModel):
     """Single order book level."""
+
     price: float
     volume: float
 
 
 class OrderBookSnapshot(BaseModel):
     """Order book snapshot for prediction."""
+
     timestamp: int
     exchange: str
     symbol: str
@@ -42,12 +44,18 @@ class OrderBookSnapshot(BaseModel):
 
 class PredictionRequest(BaseModel):
     """Request for model prediction."""
-    snapshots: List[OrderBookSnapshot] = Field(..., description="Sequence of order book snapshots")
-    model_name: str = Field(default="lstm_v1", description="Model to use for prediction")
+
+    snapshots: List[OrderBookSnapshot] = Field(
+        ..., description="Sequence of order book snapshots"
+    )
+    model_name: str = Field(
+        default="lstm_v1", description="Model to use for prediction"
+    )
 
 
 class PredictionResponse(BaseModel):
     """Response containing prediction."""
+
     prediction: str = Field(..., description="Predicted class: up, down, or flat")
     probabilities: Dict[str, float] = Field(..., description="Class probabilities")
     confidence: float = Field(..., description="Confidence score (max probability)")
@@ -58,6 +66,7 @@ class PredictionResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     timestamp: str
     models_loaded: List[str]
@@ -68,7 +77,7 @@ class HealthResponse(BaseModel):
 app = FastAPI(
     title="HFT Order Book Prediction API",
     description="Real-time order book imbalance forecasting",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS middleware
@@ -80,13 +89,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Global state
 class AppState:
     """Application state container."""
+
     def __init__(self):
         self.models: Dict[str, torch.nn.Module] = {}
         self.redis_client: Optional[redis.Redis] = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 state = AppState()
 
@@ -101,9 +113,7 @@ async def startup_event():
         redis_host = os.getenv("REDIS_HOST", "localhost")
         redis_port = int(os.getenv("REDIS_PORT", 6379))
         state.redis_client = redis.Redis(
-            host=redis_host,
-            port=redis_port,
-            decode_responses=True
+            host=redis_host, port=redis_port, decode_responses=True
         )
         state.redis_client.ping()
         logger.info(f"Connected to Redis at {redis_host}:{redis_port}")
@@ -130,7 +140,7 @@ async def root():
     return {
         "message": "HFT Order Book Prediction API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
@@ -149,7 +159,7 @@ async def health_check():
         status="healthy",
         timestamp=datetime.utcnow().isoformat(),
         models_loaded=list(state.models.keys()),
-        redis_connected=redis_ok
+        redis_connected=redis_ok,
     )
 
 
@@ -168,8 +178,7 @@ async def predict(request: PredictionRequest):
         # For demo purposes, allow "dummy" model
         if request.model_name != "dummy":
             raise HTTPException(
-                status_code=404,
-                detail=f"Model '{request.model_name}' not found"
+                status_code=404, detail=f"Model '{request.model_name}' not found"
             )
 
     # Check cache (if Redis available)
@@ -212,26 +221,26 @@ async def predict(request: PredictionRequest):
         probabilities={
             "down": float(probs[0]),
             "flat": float(probs[1]),
-            "up": float(probs[2])
+            "up": float(probs[2]),
         },
         confidence=float(np.max(probs)),
         timestamp=datetime.utcnow().isoformat(),
         model_name=request.model_name,
-        latency_ms=latency_ms
+        latency_ms=latency_ms,
     )
 
     # Cache result
     if state.redis_client and cache_key:
         try:
             state.redis_client.setex(
-                cache_key,
-                60,  # 60 second TTL
-                json.dumps(response.dict())
+                cache_key, 60, json.dumps(response.dict())  # 60 second TTL
             )
         except Exception as e:
             logger.warning(f"Cache write error: {e}")
 
-    logger.info(f"Prediction: {class_names[pred_class]} (confidence: {response.confidence:.3f}, latency: {latency_ms:.2f}ms)")
+    logger.info(
+        f"Prediction: {class_names[pred_class]} (confidence: {response.confidence:.3f}, latency: {latency_ms:.2f}ms)"
+    )
 
     return response
 
@@ -278,10 +287,7 @@ def extract_features(snapshots: List[OrderBookSnapshot]) -> np.ndarray:
 @app.get("/models", tags=["Models"])
 async def list_models():
     """List available models."""
-    return {
-        "models": list(state.models.keys()),
-        "device": str(state.device)
-    }
+    return {"models": list(state.models.keys()), "device": str(state.device)}
 
 
 @app.get("/metrics", tags=["Metrics"])
@@ -292,11 +298,12 @@ async def get_metrics():
         "total_predictions": 0,
         "avg_latency_ms": 0,
         "cache_hit_rate": 0,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
 # Run with: uvicorn src.api.prediction_service:app --reload
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

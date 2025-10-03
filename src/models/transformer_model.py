@@ -39,14 +39,14 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
 
         pe = pe.unsqueeze(0)  # Add batch dimension
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
         """
         Args:
             x: Tensor of shape (batch, seq_len, d_model)
         """
-        x = x + self.pe[:, :x.size(1), :]
+        x = x + self.pe[:, : x.size(1), :]
         return x
 
 
@@ -65,7 +65,7 @@ class OrderBookTransformer(nn.Module):
         num_encoder_layers=4,
         dim_feedforward=512,
         dropout=0.1,
-        num_classes=3
+        num_classes=3,
     ):
         """
         Initialize Transformer model.
@@ -96,12 +96,11 @@ class OrderBookTransformer(nn.Module):
             nhead=nhead,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            batch_first=True
+            batch_first=True,
         )
 
         self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer,
-            num_layers=num_encoder_layers
+            encoder_layer, num_layers=num_encoder_layers
         )
 
         # Classification head
@@ -199,24 +198,26 @@ class MultiScaleTransformer(nn.Module):
         num_encoder_layers=3,
         dropout=0.1,
         num_classes=3,
-        scales=[1, 5, 10]  # Different downsampling factors
+        scales=[1, 5, 10],  # Different downsampling factors
     ):
         super(MultiScaleTransformer, self).__init__()
 
         self.scales = scales
 
         # Create transformer for each scale
-        self.transformers = nn.ModuleList([
-            OrderBookTransformer(
-                input_size=input_size,
-                d_model=d_model,
-                nhead=nhead,
-                num_encoder_layers=num_encoder_layers,
-                dropout=dropout,
-                num_classes=d_model  # Output features, not classes
-            )
-            for _ in scales
-        ])
+        self.transformers = nn.ModuleList(
+            [
+                OrderBookTransformer(
+                    input_size=input_size,
+                    d_model=d_model,
+                    nhead=nhead,
+                    num_encoder_layers=num_encoder_layers,
+                    dropout=dropout,
+                    num_classes=d_model,  # Output features, not classes
+                )
+                for _ in scales
+            ]
+        )
 
         # Fusion layer
         self.fusion = nn.Linear(d_model * len(scales), d_model)
@@ -234,7 +235,7 @@ class MultiScaleTransformer(nn.Module):
         new_len = seq_len // factor
 
         # Reshape and average
-        x_trimmed = x[:, :new_len * factor, :]
+        x_trimmed = x[:, : new_len * factor, :]
         x_reshaped = x_trimmed.reshape(batch_size, new_len, factor, features)
         x_downsampled = torch.mean(x_reshaped, dim=2)
 
@@ -298,12 +299,12 @@ if __name__ == "__main__":
         nhead=8,
         num_encoder_layers=4,
         dropout=0.1,
-        num_classes=num_classes
+        num_classes=num_classes,
     )
 
-    print("="*80)
+    print("=" * 80)
     print("Order Book Transformer Model")
-    print("="*80)
+    print("=" * 80)
     print(model)
     print(f"\nTotal parameters: {count_parameters(model):,}")
 
@@ -325,9 +326,9 @@ if __name__ == "__main__":
     print(f"  Predicted class: {predictions[0]}")
 
     # Test multi-scale transformer
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Multi-Scale Transformer Model")
-    print("="*80)
+    print("=" * 80)
 
     multi_model = MultiScaleTransformer(
         input_size=input_size,
@@ -335,7 +336,7 @@ if __name__ == "__main__":
         nhead=8,
         num_encoder_layers=3,
         num_classes=num_classes,
-        scales=[1, 5, 10]
+        scales=[1, 5, 10],
     )
 
     print(f"Total parameters: {count_parameters(multi_model):,}")

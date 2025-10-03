@@ -57,10 +57,7 @@ class LOBSTERLoader:
         self.config = config or LOBSTERConfig()
 
     def load_files(
-        self,
-        message_file: Path,
-        orderbook_file: Path,
-        normalize_time: bool = True
+        self, message_file: Path, orderbook_file: Path, normalize_time: bool = True
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Load LOBSTER message and orderbook files.
@@ -76,7 +73,14 @@ class LOBSTERLoader:
         logger.info(f"Loading LOBSTER data from {message_file.parent}")
 
         # Load message file
-        message_columns = ['timestamp', 'event_type', 'order_id', 'size', 'price', 'direction']
+        message_columns = [
+            "timestamp",
+            "event_type",
+            "order_id",
+            "size",
+            "price",
+            "direction",
+        ]
         messages_df = pd.read_csv(message_file, names=message_columns, header=None)
 
         # Load orderbook file
@@ -84,14 +88,18 @@ class LOBSTERLoader:
         orderbook_df = pd.read_csv(orderbook_file, names=orderbook_columns, header=None)
 
         if normalize_time:
-            messages_df['timestamp'] = self._normalize_timestamps(messages_df['timestamp'])
-            orderbook_df['timestamp'] = messages_df['timestamp'].values
+            messages_df["timestamp"] = self._normalize_timestamps(
+                messages_df["timestamp"]
+            )
+            orderbook_df["timestamp"] = messages_df["timestamp"].values
 
         # Add metadata
-        messages_df['exchange'] = self.config.exchange
-        orderbook_df['exchange'] = self.config.exchange
+        messages_df["exchange"] = self.config.exchange
+        orderbook_df["exchange"] = self.config.exchange
 
-        logger.info(f"Loaded {len(messages_df):,} messages and {len(orderbook_df):,} orderbook snapshots")
+        logger.info(
+            f"Loaded {len(messages_df):,} messages and {len(orderbook_df):,} orderbook snapshots"
+        )
 
         return messages_df, orderbook_df
 
@@ -99,12 +107,9 @@ class LOBSTERLoader:
         """Generate column names for orderbook DataFrame."""
         columns = []
         for i in range(1, levels + 1):
-            columns.extend([
-                f'ask_price_{i}',
-                f'ask_size_{i}',
-                f'bid_price_{i}',
-                f'bid_size_{i}'
-            ])
+            columns.extend(
+                [f"ask_price_{i}", f"ask_size_{i}", f"bid_price_{i}", f"bid_size_{i}"]
+            )
         return columns
 
     def _normalize_timestamps(self, timestamps: pd.Series) -> pd.Series:
@@ -116,7 +121,7 @@ class LOBSTERLoader:
         # Assuming data is from a specific date (would be parsed from filename)
         base_date = pd.Timestamp.today().normalize()
 
-        return pd.to_datetime(base_date) + pd.to_timedelta(timestamps, unit='s')
+        return pd.to_datetime(base_date) + pd.to_timedelta(timestamps, unit="s")
 
     def parse_filename(self, filename: str) -> Dict[str, str]:
         """
@@ -125,18 +130,18 @@ class LOBSTERLoader:
         Format: {TICKER}_{DATE}_{START}_{END}_message_{LEVELS}.csv
         Example: AAPL_2012-06-21_34200000_57600000_message_10.csv
         """
-        parts = filename.replace('.csv', '').split('_')
+        parts = filename.replace(".csv", "").split("_")
 
         if len(parts) < 6:
             raise ValueError(f"Invalid LOBSTER filename format: {filename}")
 
         return {
-            'ticker': parts[0],
-            'date': parts[1],
-            'start_time': parts[2],
-            'end_time': parts[3],
-            'file_type': parts[4],  # 'message' or 'orderbook'
-            'levels': int(parts[5])
+            "ticker": parts[0],
+            "date": parts[1],
+            "start_time": parts[2],
+            "end_time": parts[3],
+            "file_type": parts[4],  # 'message' or 'orderbook'
+            "levels": int(parts[5]),
         }
 
     def reconstruct_order_book(
@@ -144,7 +149,7 @@ class LOBSTERLoader:
         messages_df: pd.DataFrame,
         orderbook_df: pd.DataFrame,
         start_idx: int = 0,
-        end_idx: Optional[int] = None
+        end_idx: Optional[int] = None,
     ) -> pd.DataFrame:
         """
         Reconstruct standardized order book format from LOBSTER data.
@@ -164,10 +169,10 @@ class LOBSTERLoader:
             asks = []
 
             for i in range(1, self.config.levels + 1):
-                bid_price = row[f'bid_price_{i}']
-                bid_size = row[f'bid_size_{i}']
-                ask_price = row[f'ask_price_{i}']
-                ask_size = row[f'ask_size_{i}']
+                bid_price = row[f"bid_price_{i}"]
+                bid_size = row[f"bid_size_{i}"]
+                ask_price = row[f"ask_price_{i}"]
+                ask_size = row[f"ask_size_{i}"]
 
                 if bid_price > 0 and bid_size > 0:
                     bids.append([bid_price, bid_size])
@@ -180,37 +185,50 @@ class LOBSTERLoader:
             mid_price = (bids[0][0] + asks[0][0]) / 2
             spread = asks[0][0] - bids[0][0]
 
-            reconstructed.append({
-                'timestamp': row['timestamp'],
-                'exchange': row['exchange'],
-                'bids': bids,
-                'asks': asks,
-                'mid_price': mid_price,
-                'spread': spread,
-                'spread_bps': (spread / mid_price) * 10000 if mid_price > 0 else 0
-            })
+            reconstructed.append(
+                {
+                    "timestamp": row["timestamp"],
+                    "exchange": row["exchange"],
+                    "bids": bids,
+                    "asks": asks,
+                    "mid_price": mid_price,
+                    "spread": spread,
+                    "spread_bps": (spread / mid_price) * 10000 if mid_price > 0 else 0,
+                }
+            )
 
         return pd.DataFrame(reconstructed)
 
     def compute_event_statistics(self, messages_df: pd.DataFrame) -> Dict[str, any]:
         """Compute statistics on order book events."""
-        event_counts = messages_df['event_type'].value_counts().to_dict()
+        event_counts = messages_df["event_type"].value_counts().to_dict()
 
         event_names = {
-            1: 'new_limit_order',
-            2: 'cancellation',
-            3: 'deletion',
-            4: 'execution_visible',
-            5: 'execution_hidden',
-            6: 'cross_trade',
-            7: 'trading_halt'
+            1: "new_limit_order",
+            2: "cancellation",
+            3: "deletion",
+            4: "execution_visible",
+            5: "execution_hidden",
+            6: "cross_trade",
+            7: "trading_halt",
         }
 
         stats = {
-            'total_events': len(messages_df),
-            'event_breakdown': {event_names.get(k, f'unknown_{k}'): v for k, v in event_counts.items()},
-            'time_span_seconds': messages_df['timestamp'].max() - messages_df['timestamp'].min() if isinstance(messages_df['timestamp'].iloc[0], (int, float)) else None,
-            'avg_events_per_second': len(messages_df) / (messages_df['timestamp'].max() - messages_df['timestamp'].min()) if isinstance(messages_df['timestamp'].iloc[0], (int, float)) else None
+            "total_events": len(messages_df),
+            "event_breakdown": {
+                event_names.get(k, f"unknown_{k}"): v for k, v in event_counts.items()
+            },
+            "time_span_seconds": (
+                messages_df["timestamp"].max() - messages_df["timestamp"].min()
+                if isinstance(messages_df["timestamp"].iloc[0], (int, float))
+                else None
+            ),
+            "avg_events_per_second": (
+                len(messages_df)
+                / (messages_df["timestamp"].max() - messages_df["timestamp"].min())
+                if isinstance(messages_df["timestamp"].iloc[0], (int, float))
+                else None
+            ),
         }
 
         return stats
@@ -220,27 +238,31 @@ class LOBSTERLoader:
         messages_df: pd.DataFrame,
         orderbook_df: pd.DataFrame,
         start_time: Optional[dt_time] = None,
-        end_time: Optional[dt_time] = None
+        end_time: Optional[dt_time] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Filter data by time of day."""
         if start_time is None and end_time is None:
             return messages_df, orderbook_df
 
         # Convert to datetime if needed
-        if not pd.api.types.is_datetime64_any_dtype(messages_df['timestamp']):
-            raise ValueError("Timestamps must be datetime type. Use normalize_time=True when loading.")
+        if not pd.api.types.is_datetime64_any_dtype(messages_df["timestamp"]):
+            raise ValueError(
+                "Timestamps must be datetime type. Use normalize_time=True when loading."
+            )
 
         mask = pd.Series([True] * len(messages_df))
 
         if start_time:
-            mask &= messages_df['timestamp'].dt.time >= start_time
+            mask &= messages_df["timestamp"].dt.time >= start_time
         if end_time:
-            mask &= messages_df['timestamp'].dt.time <= end_time
+            mask &= messages_df["timestamp"].dt.time <= end_time
 
         filtered_messages = messages_df[mask].reset_index(drop=True)
         filtered_orderbook = orderbook_df[mask].reset_index(drop=True)
 
-        logger.info(f"Filtered to {len(filtered_messages):,} events between {start_time} and {end_time}")
+        logger.info(
+            f"Filtered to {len(filtered_messages):,} events between {start_time} and {end_time}"
+        )
 
         return filtered_messages, filtered_orderbook
 
@@ -250,8 +272,15 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="LOBSTER Data Loader and Analyzer")
-    parser.add_argument("--message-file", type=Path, required=True, help="Path to LOBSTER message file")
-    parser.add_argument("--orderbook-file", type=Path, required=True, help="Path to LOBSTER orderbook file")
+    parser.add_argument(
+        "--message-file", type=Path, required=True, help="Path to LOBSTER message file"
+    )
+    parser.add_argument(
+        "--orderbook-file",
+        type=Path,
+        required=True,
+        help="Path to LOBSTER orderbook file",
+    )
     parser.add_argument("--levels", type=int, default=10, help="Number of price levels")
     parser.add_argument("--start-time", type=str, help="Start time (HH:MM:SS)")
     parser.add_argument("--end-time", type=str, help="End time (HH:MM:SS)")
@@ -265,36 +294,44 @@ if __name__ == "__main__":
 
     # Load data
     messages_df, orderbook_df = loader.load_files(
-        args.message_file,
-        args.orderbook_file,
-        normalize_time=True
+        args.message_file, args.orderbook_file, normalize_time=True
     )
 
     # Filter by time if specified
     if args.start_time or args.end_time:
-        start_t = datetime.strptime(args.start_time, "%H:%M:%S").time() if args.start_time else None
-        end_t = datetime.strptime(args.end_time, "%H:%M:%S").time() if args.end_time else None
-        messages_df, orderbook_df = loader.filter_by_time(messages_df, orderbook_df, start_t, end_t)
+        start_t = (
+            datetime.strptime(args.start_time, "%H:%M:%S").time()
+            if args.start_time
+            else None
+        )
+        end_t = (
+            datetime.strptime(args.end_time, "%H:%M:%S").time()
+            if args.end_time
+            else None
+        )
+        messages_df, orderbook_df = loader.filter_by_time(
+            messages_df, orderbook_df, start_t, end_t
+        )
 
     # Print statistics
     if args.stats:
         stats = loader.compute_event_statistics(messages_df)
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("LOBSTER Data Statistics")
-        print("="*60)
+        print("=" * 60)
         print(f"Total Events: {stats['total_events']:,}")
         print("\nEvent Breakdown:")
-        for event_type, count in stats['event_breakdown'].items():
-            pct = (count / stats['total_events']) * 100
+        for event_type, count in stats["event_breakdown"].items():
+            pct = (count / stats["total_events"]) * 100
             print(f"  {event_type:20s}: {count:>10,} ({pct:>5.2f}%)")
 
-        if stats['time_span_seconds']:
+        if stats["time_span_seconds"]:
             print(f"\nTime Span: {stats['time_span_seconds']:.2f} seconds")
             print(f"Avg Events/Second: {stats['avg_events_per_second']:.2f}")
 
     # Reconstruct and display sample
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Sample Order Book Snapshots (first 5)")
-    print("="*60)
+    print("=" * 60)
     reconstructed = loader.reconstruct_order_book(messages_df, orderbook_df, 0, 5)
-    print(reconstructed[['timestamp', 'mid_price', 'spread', 'spread_bps']])
+    print(reconstructed[["timestamp", "mid_price", "spread", "spread_bps"]])

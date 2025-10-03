@@ -13,7 +13,9 @@
       "Bash(git remote set-url:*)",
       "Bash(find:*)",
       "Bash(tree:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(awk:*)",
+      "Bash(black:*)"
     ],
     "deny": [],
     "ask": []

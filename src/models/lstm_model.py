@@ -33,7 +33,7 @@ class OrderBookLSTM(nn.Module):
         num_layers: int = 2,
         num_classes: int = 3,
         dropout: float = 0.3,
-        bidirectional: bool = False
+        bidirectional: bool = False,
     ):
         """
         Initialize LSTM model.
@@ -61,7 +61,7 @@ class OrderBookLSTM(nn.Module):
             num_layers=num_layers,
             dropout=dropout if num_layers > 1 else 0,
             bidirectional=bidirectional,
-            batch_first=True
+            batch_first=True,
         )
 
         # Dropout
@@ -80,7 +80,7 @@ class OrderBookLSTM(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None
+        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Forward pass.
@@ -153,7 +153,7 @@ class AttentionLSTM(nn.Module):
         num_layers: int = 2,
         num_classes: int = 3,
         dropout: float = 0.3,
-        attention_heads: int = 4
+        attention_heads: int = 4,
     ):
         super(AttentionLSTM, self).__init__()
 
@@ -166,7 +166,7 @@ class AttentionLSTM(nn.Module):
             hidden_size=hidden_size,
             num_layers=num_layers,
             dropout=dropout if num_layers > 1 else 0,
-            batch_first=True
+            batch_first=True,
         )
 
         # Multi-head attention
@@ -174,7 +174,7 @@ class AttentionLSTM(nn.Module):
             embed_dim=hidden_size,
             num_heads=attention_heads,
             dropout=dropout,
-            batch_first=True
+            batch_first=True,
         )
 
         # Classification head
@@ -186,19 +186,14 @@ class AttentionLSTM(nn.Module):
         self.ln1 = nn.LayerNorm(hidden_size)
         self.ln2 = nn.LayerNorm(hidden_size)
 
-    def forward(
-        self,
-        x: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass with attention."""
         # LSTM encoding
         lstm_out, _ = self.lstm(x)
         lstm_out = self.ln1(lstm_out)
 
         # Self-attention
-        attn_out, attn_weights = self.attention(
-            lstm_out, lstm_out, lstm_out
-        )
+        attn_out, attn_weights = self.attention(lstm_out, lstm_out, lstm_out)
         attn_out = self.ln2(attn_out)
 
         # Global average pooling over sequence
@@ -225,11 +220,8 @@ class AttentionLSTM(nn.Module):
 
 # Utility functions for model creation
 
-def create_model(
-    model_type: str = "lstm",
-    input_size: int = 16,
-    **kwargs
-) -> nn.Module:
+
+def create_model(model_type: str = "lstm", input_size: int = 16, **kwargs) -> nn.Module:
     """
     Factory function to create models.
 
@@ -258,16 +250,12 @@ def count_parameters(model: nn.Module) -> int:
 if __name__ == "__main__":
     # Create model
     model = create_model(
-        model_type="lstm",
-        input_size=16,
-        hidden_size=128,
-        num_layers=2,
-        dropout=0.3
+        model_type="lstm", input_size=16, hidden_size=128, num_layers=2, dropout=0.3
     )
 
-    print("="*60)
+    print("=" * 60)
     print("Order Book LSTM Model")
-    print("="*60)
+    print("=" * 60)
     print(model)
     print(f"\nTotal parameters: {count_parameters(model):,}")
 
@@ -293,16 +281,16 @@ if __name__ == "__main__":
     print(f"  Predicted class: {predictions[0]}")
 
     # Test attention LSTM
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Attention LSTM Model")
-    print("="*60)
+    print("=" * 60)
 
     attn_model = create_model(
         model_type="attention_lstm",
         input_size=16,
         hidden_size=128,
         num_layers=2,
-        attention_heads=4
+        attention_heads=4,
     )
 
     print(f"Total parameters: {count_parameters(attn_model):,}")

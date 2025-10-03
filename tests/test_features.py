@@ -16,7 +16,7 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from features.order_flow_imbalance import OFICalculator, OrderBookState
 from features.micro_price import MicroPriceCalculator
@@ -37,56 +37,56 @@ class TestOFICalculator(unittest.TestCase):
         prev_state = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 10.0), (99.9, 15.0)],
-            asks=[(100.1, 12.0), (100.2, 18.0)]
+            asks=[(100.1, 12.0), (100.2, 18.0)],
         )
 
         # Current state - bid volume increased
         curr_state = OrderBookState(
             timestamp=1001,
             bids=[(100.0, 20.0), (99.9, 15.0)],  # +10 at best bid
-            asks=[(100.1, 12.0), (100.2, 18.0)]
+            asks=[(100.1, 12.0), (100.2, 18.0)],
         )
 
         self.calculator.update(prev_state)
         ofi_metrics = self.calculator.compute_ofi(curr_state, num_levels=2)
 
         # OFI should be positive (bid volume increased)
-        self.assertGreater(ofi_metrics['ofi_level_1'], 0)
+        self.assertGreater(ofi_metrics["ofi_level_1"], 0)
 
     def test_basic_ofi_negative(self):
         """Test OFI calculation with increased ask volume."""
         prev_state = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 10.0), (99.9, 15.0)],
-            asks=[(100.1, 12.0), (100.2, 18.0)]
+            asks=[(100.1, 12.0), (100.2, 18.0)],
         )
 
         # Ask volume increased
         curr_state = OrderBookState(
             timestamp=1001,
             bids=[(100.0, 10.0), (99.9, 15.0)],
-            asks=[(100.1, 25.0), (100.2, 18.0)]  # +13 at best ask
+            asks=[(100.1, 25.0), (100.2, 18.0)],  # +13 at best ask
         )
 
         self.calculator.update(prev_state)
         ofi_metrics = self.calculator.compute_ofi(curr_state, num_levels=2)
 
         # OFI should be negative (ask volume increased)
-        self.assertLess(ofi_metrics['ofi_level_1'], 0)
+        self.assertLess(ofi_metrics["ofi_level_1"], 0)
 
     def test_ofi_no_change(self):
         """Test OFI when order book unchanged."""
         state = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 10.0), (99.9, 15.0)],
-            asks=[(100.1, 12.0), (100.2, 18.0)]
+            asks=[(100.1, 12.0), (100.2, 18.0)],
         )
 
         self.calculator.update(state)
         ofi_metrics = self.calculator.compute_ofi(state, num_levels=2)
 
         # OFI should be zero
-        self.assertEqual(ofi_metrics['ofi_level_1'], 0.0)
+        self.assertEqual(ofi_metrics["ofi_level_1"], 0.0)
 
 
 class TestMicroPriceCalculator(unittest.TestCase):
@@ -99,9 +99,7 @@ class TestMicroPriceCalculator(unittest.TestCase):
     def test_micro_price_basic(self):
         """Test basic micro-price calculation."""
         state = OrderBookState(
-            timestamp=1000,
-            bids=[(100.0, 10.0)],
-            asks=[(100.2, 10.0)]
+            timestamp=1000, bids=[(100.0, 10.0)], asks=[(100.2, 10.0)]
         )
 
         micro_price = self.calculator.calculate(state)
@@ -116,14 +114,14 @@ class TestMicroPriceCalculator(unittest.TestCase):
         state1 = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 100.0)],  # Large bid volume
-            asks=[(100.2, 10.0)]
+            asks=[(100.2, 10.0)],
         )
 
         # More volume on ask side
         state2 = OrderBookState(
             timestamp=1001,
             bids=[(100.0, 10.0)],
-            asks=[(100.2, 100.0)]  # Large ask volume
+            asks=[(100.2, 100.0)],  # Large ask volume
         )
 
         price1 = self.calculator.calculate(state1)
@@ -138,9 +136,7 @@ class TestMicroPriceCalculator(unittest.TestCase):
     def test_spread(self):
         """Test bid-ask spread calculation."""
         state = OrderBookState(
-            timestamp=1000,
-            bids=[(100.0, 10.0)],
-            asks=[(100.5, 10.0)]
+            timestamp=1000, bids=[(100.0, 10.0)], asks=[(100.5, 10.0)]
         )
 
         spread = self.calculator.calculate_spread(state)
@@ -163,26 +159,26 @@ class TestVolumeProfileCalculator(unittest.TestCase):
         state = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 50.0), (99.9, 30.0)],
-            asks=[(100.1, 20.0), (100.2, 10.0)]
+            asks=[(100.1, 20.0), (100.2, 10.0)],
         )
 
         metrics = self.calculator.calculate(state, num_levels=2)
 
         # Should be positive (more bid volume)
-        self.assertGreater(metrics['volume_imbalance_2'], 0)
+        self.assertGreater(metrics["volume_imbalance_2"], 0)
 
     def test_volume_depth_ratio(self):
         """Test volume depth ratio."""
         state = OrderBookState(
             timestamp=1000,
             bids=[(100.0, 40.0), (99.9, 30.0), (99.8, 20.0)],
-            asks=[(100.1, 30.0), (100.2, 20.0), (100.3, 10.0)]
+            asks=[(100.1, 30.0), (100.2, 20.0), (100.3, 10.0)],
         )
 
         metrics = self.calculator.calculate(state, num_levels=3)
 
         # Depth ratio should be > 1 (more bid depth)
-        self.assertGreater(metrics['depth_ratio_3'], 1.0)
+        self.assertGreater(metrics["depth_ratio_3"], 1.0)
 
 
 class TestRealizedVolatilityEstimator(unittest.TestCase):
@@ -233,7 +229,9 @@ class TestRealizedVolatilityEstimator(unittest.TestCase):
         returns = prices.pct_change().dropna()
 
         simple_vol = RealizedVolatilityEstimator.simple_rv(returns, window=20).iloc[-1]
-        park_vol = RealizedVolatilityEstimator.parkinson_volatility(high, low, window=20).iloc[-1]
+        park_vol = RealizedVolatilityEstimator.parkinson_volatility(
+            high, low, window=20
+        ).iloc[-1]
 
         # Both should be positive and of similar magnitude
         self.assertGreater(simple_vol, 0)
@@ -255,21 +253,18 @@ class TestFeaturePipeline(unittest.TestCase):
             state = OrderBookState(
                 timestamp=1000 + i,
                 bids=[
-                    (100.0 - 0.01 * j, 10.0 + np.random.rand() * 5)
-                    for j in range(10)
+                    (100.0 - 0.01 * j, 10.0 + np.random.rand() * 5) for j in range(10)
                 ],
                 asks=[
                     (100.0 + 0.01 * (j + 1), 10.0 + np.random.rand() * 5)
                     for j in range(10)
-                ]
+                ],
             )
             snapshots.append(state)
 
         # Create pipeline
         config = FeaturePipelineConfig(
-            ofi_levels=[1, 5],
-            ofi_windows=[10, 20],
-            volatility_windows=[10, 20]
+            ofi_levels=[1, 5], ofi_windows=[10, 20], volatility_windows=[10, 20]
         )
         pipeline = FeaturePipeline(config)
 
@@ -285,10 +280,10 @@ class TestFeaturePipeline(unittest.TestCase):
         self.assertLess(features_df.isnull().sum().sum() / features_df.size, 0.5)
 
 
-if __name__ == '__main__':
-    print("="*80)
+if __name__ == "__main__":
+    print("=" * 80)
     print("RUNNING FEATURE CALCULATOR UNIT TESTS")
-    print("="*80)
+    print("=" * 80)
 
     # Run tests with verbosity
     unittest.main(verbosity=2)

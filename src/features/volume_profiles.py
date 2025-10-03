@@ -42,7 +42,7 @@ class VolumeProfileCalculator:
     def compute_volume_metrics(
         bids: List[Tuple[float, float]],
         asks: List[Tuple[float, float]],
-        depth_levels: int = 20
+        depth_levels: int = 20,
     ) -> VolumeProfileMetrics:
         """
         Compute comprehensive volume profile metrics.
@@ -78,12 +78,24 @@ class VolumeProfileCalculator:
 
         # Liquidity concentration (what % of volume is in top 3 levels)
         top_n = min(3, len(bid_volumes), len(ask_volumes))
-        liq_conc_bid = np.sum(bid_volumes[:top_n]) / total_bid_vol if total_bid_vol > 0 else 0
-        liq_conc_ask = np.sum(ask_volumes[:top_n]) / total_ask_vol if total_ask_vol > 0 else 0
+        liq_conc_bid = (
+            np.sum(bid_volumes[:top_n]) / total_bid_vol if total_bid_vol > 0 else 0
+        )
+        liq_conc_ask = (
+            np.sum(ask_volumes[:top_n]) / total_ask_vol if total_ask_vol > 0 else 0
+        )
 
         # Volume-weighted average prices
-        vwap_bid = np.sum(bid_prices * bid_volumes) / total_bid_vol if total_bid_vol > 0 else bid_prices[0]
-        vwap_ask = np.sum(ask_prices * ask_volumes) / total_ask_vol if total_ask_vol > 0 else ask_prices[0]
+        vwap_bid = (
+            np.sum(bid_prices * bid_volumes) / total_bid_vol
+            if total_bid_vol > 0
+            else bid_prices[0]
+        )
+        vwap_ask = (
+            np.sum(ask_prices * ask_volumes) / total_ask_vol
+            if total_ask_vol > 0
+            else ask_prices[0]
+        )
 
         # Volume-weighted spread
         vw_spread = vwap_ask - vwap_bid
@@ -98,17 +110,16 @@ class VolumeProfileCalculator:
             liquidity_concentration_ask=liq_conc_ask,
             vwap_bid=vwap_bid,
             vwap_ask=vwap_ask,
-            volume_weighted_spread=vw_spread
+            volume_weighted_spread=vw_spread,
         )
 
     @staticmethod
     def compute_spread_metrics(
-        bids: List[Tuple[float, float]],
-        asks: List[Tuple[float, float]]
+        bids: List[Tuple[float, float]], asks: List[Tuple[float, float]]
     ) -> Dict[str, float]:
         """Compute various spread metrics."""
         if not bids or not asks:
-            return {'spread': 0, 'spread_bps': 0, 'relative_spread': 0}
+            return {"spread": 0, "spread_bps": 0, "relative_spread": 0}
 
         bid_price = bids[0][0]
         ask_price = asks[0][0]
@@ -119,16 +130,13 @@ class VolumeProfileCalculator:
         relative_spread = spread / mid_price if mid_price > 0 else 0
 
         return {
-            'spread': spread,
-            'spread_bps': spread_bps,
-            'relative_spread': relative_spread
+            "spread": spread,
+            "spread_bps": spread_bps,
+            "relative_spread": relative_spread,
         }
 
 
-def compute_volume_features(
-    df: pd.DataFrame,
-    depth_levels: int = 20
-) -> pd.DataFrame:
+def compute_volume_features(df: pd.DataFrame, depth_levels: int = 20) -> pd.DataFrame:
     """
     Compute volume profile features from DataFrame.
 
@@ -142,8 +150,8 @@ def compute_volume_features(
     features = []
 
     for idx, row in df.iterrows():
-        bids = row['bids'] if isinstance(row['bids'], list) else []
-        asks = row['asks'] if isinstance(row['asks'], list) else []
+        bids = row["bids"] if isinstance(row["bids"], list) else []
+        asks = row["asks"] if isinstance(row["asks"], list) else []
 
         # Convert to tuples if needed
         if bids and not isinstance(bids[0], tuple):
@@ -152,18 +160,20 @@ def compute_volume_features(
             asks = [tuple(a) for a in asks]
 
         # Compute metrics
-        metrics = VolumeProfileCalculator.compute_volume_metrics(bids, asks, depth_levels)
+        metrics = VolumeProfileCalculator.compute_volume_metrics(
+            bids, asks, depth_levels
+        )
         spread_metrics = VolumeProfileCalculator.compute_spread_metrics(bids, asks)
 
         feature_dict = {
-            'total_bid_volume': metrics.total_bid_volume,
-            'total_ask_volume': metrics.total_ask_volume,
-            'volume_imbalance': metrics.volume_imbalance,
-            'volume_imbalance_ratio': metrics.volume_imbalance_ratio,
-            'depth_imbalance': metrics.depth_imbalance,
-            'liquidity_concentration_bid': metrics.liquidity_concentration_bid,
-            'liquidity_concentration_ask': metrics.liquidity_concentration_ask,
-            **spread_metrics
+            "total_bid_volume": metrics.total_bid_volume,
+            "total_ask_volume": metrics.total_ask_volume,
+            "volume_imbalance": metrics.volume_imbalance,
+            "volume_imbalance_ratio": metrics.volume_imbalance_ratio,
+            "depth_imbalance": metrics.depth_imbalance,
+            "liquidity_concentration_bid": metrics.liquidity_concentration_bid,
+            "liquidity_concentration_ask": metrics.liquidity_concentration_ask,
+            **spread_metrics,
         }
 
         features.append(feature_dict)
@@ -182,12 +192,22 @@ if __name__ == "__main__":
     for i in range(100):
         mid_price = 100 + np.random.normal(0, 1)
 
-        bids = [[mid_price - 0.01 * (j + 1), 50 + np.random.uniform(-20, 20)] for j in range(20)]
-        asks = [[mid_price + 0.01 * (j + 1), 50 + np.random.uniform(-20, 20)] for j in range(20)]
+        bids = [
+            [mid_price - 0.01 * (j + 1), 50 + np.random.uniform(-20, 20)]
+            for j in range(20)
+        ]
+        asks = [
+            [mid_price + 0.01 * (j + 1), 50 + np.random.uniform(-20, 20)]
+            for j in range(20)
+        ]
 
-        snapshots.append({'timestamp': i, 'bids': bids, 'asks': asks})
+        snapshots.append({"timestamp": i, "bids": bids, "asks": asks})
 
     df = pd.DataFrame(snapshots)
     df_with_features = compute_volume_features(df)
 
-    print(df_with_features[['volume_imbalance_ratio', 'depth_imbalance', 'spread_bps']].head(10))
+    print(
+        df_with_features[
+            ["volume_imbalance_ratio", "depth_imbalance", "spread_bps"]
+        ].head(10)
+    )

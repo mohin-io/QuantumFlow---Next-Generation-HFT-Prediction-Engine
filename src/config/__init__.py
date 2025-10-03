@@ -11,7 +11,7 @@ from .config_manager import (
     BacktestConfig,
     load_config,
     Environment,
-    LogLevel
+    LogLevel,
 )
 
 __all__ = [
@@ -25,5 +25,5 @@ __all__ = [
     "BacktestConfig",
     "load_config",
     "Environment",
-    "LogLevel"
+    "LogLevel",
 ]

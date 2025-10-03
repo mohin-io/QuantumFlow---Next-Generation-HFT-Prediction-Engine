@@ -48,10 +48,7 @@ class RealizedVolatilityCalculator:
     """
 
     @staticmethod
-    def simple_realized_volatility(
-        returns: np.ndarray,
-        window: int = 20
-    ) -> np.ndarray:
+    def simple_realized_volatility(returns: np.ndarray, window: int = 20) -> np.ndarray:
         """
         Simple realized volatility (standard deviation of returns).
 
@@ -66,9 +63,7 @@ class RealizedVolatilityCalculator:
 
     @staticmethod
     def parkinson_volatility(
-        high: np.ndarray,
-        low: np.ndarray,
-        window: int = 20
+        high: np.ndarray, low: np.ndarray, window: int = 20
     ) -> np.ndarray:
         """
         Parkinson volatility estimator.
@@ -87,7 +82,7 @@ class RealizedVolatilityCalculator:
             Array of Parkinson volatility estimates
         """
         hl_ratio = np.log(high / low)
-        hl_ratio_sq = hl_ratio ** 2
+        hl_ratio_sq = hl_ratio**2
 
         # Rolling mean of squared log ratios
         rolling_mean = pd.Series(hl_ratio_sq).rolling(window=window).mean()
@@ -103,7 +98,7 @@ class RealizedVolatilityCalculator:
         high: np.ndarray,
         low: np.ndarray,
         close: np.ndarray,
-        window: int = 20
+        window: int = 20,
     ) -> np.ndarray:
         """
         Garman-Klass volatility estimator.
@@ -126,7 +121,7 @@ class RealizedVolatilityCalculator:
         hl = np.log(high / low)
         co = np.log(close / open_price)
 
-        component = 0.5 * (hl ** 2) - (2 * np.log(2) - 1) * (co ** 2)
+        component = 0.5 * (hl**2) - (2 * np.log(2) - 1) * (co**2)
 
         rolling_mean = pd.Series(component).rolling(window=window).mean()
 
@@ -140,7 +135,7 @@ class RealizedVolatilityCalculator:
         high: np.ndarray,
         low: np.ndarray,
         close: np.ndarray,
-        window: int = 20
+        window: int = 20,
     ) -> np.ndarray:
         """
         Rogers-Satchell volatility estimator.
@@ -179,7 +174,7 @@ class RealizedVolatilityCalculator:
         high: np.ndarray,
         low: np.ndarray,
         close: np.ndarray,
-        window: int = 20
+        window: int = 20,
     ) -> np.ndarray:
         """
         Yang-Zhang volatility estimator.
@@ -217,16 +212,13 @@ class RealizedVolatilityCalculator:
         # Pad overnight_vol to match length
         overnight_vol = np.concatenate([[np.nan], overnight_vol.values])
 
-        yz_vol = np.sqrt(
-            overnight_vol ** 2 + k * (oc_vol ** 2) + (1 - k) * (rs_vol ** 2)
-        )
+        yz_vol = np.sqrt(overnight_vol**2 + k * (oc_vol**2) + (1 - k) * (rs_vol**2))
 
         return yz_vol
 
 
 def compute_ohlc_from_snapshots(
-    snapshots: List[Dict],
-    window_ticks: int = 20
+    snapshots: List[Dict], window_ticks: int = 20
 ) -> pd.DataFrame:
     """
     Compute OHLC bars from order book snapshots.
@@ -242,26 +234,26 @@ def compute_ohlc_from_snapshots(
     timestamps = []
 
     for snapshot in snapshots:
-        bids = snapshot.get('bids', [])
-        asks = snapshot.get('asks', [])
+        bids = snapshot.get("bids", [])
+        asks = snapshot.get("asks", [])
 
         if bids and asks:
             mid_price = (bids[0][0] + asks[0][0]) / 2
             mid_prices.append(mid_price)
-            timestamps.append(snapshot.get('timestamp', 0))
+            timestamps.append(snapshot.get("timestamp", 0))
 
     # Create bars
     bars = []
     for i in range(0, len(mid_prices), window_ticks):
-        window_prices = mid_prices[i:i+window_ticks]
+        window_prices = mid_prices[i : i + window_ticks]
 
         if len(window_prices) > 0:
             bar = {
-                'timestamp': timestamps[i],
-                'open': window_prices[0],
-                'high': max(window_prices),
-                'low': min(window_prices),
-                'close': window_prices[-1]
+                "timestamp": timestamps[i],
+                "open": window_prices[0],
+                "high": max(window_prices),
+                "low": min(window_prices),
+                "close": window_prices[-1],
             }
             bars.append(bar)
 
@@ -269,9 +261,7 @@ def compute_ohlc_from_snapshots(
 
 
 def compute_volatility_features(
-    df: pd.DataFrame,
-    windows: List[int] = [20, 50, 100],
-    price_col: str = 'close'
+    df: pd.DataFrame, windows: List[int] = [20, 50, 100], price_col: str = "close"
 ) -> pd.DataFrame:
     """
     Compute multiple volatility features from OHLC data.
@@ -291,32 +281,38 @@ def compute_volatility_features(
 
     for window in windows:
         # Simple realized volatility
-        rv = RealizedVolatilityCalculator.simple_realized_volatility(returns.values, window)
-        result_df[f'rv_{window}'] = rv
+        rv = RealizedVolatilityCalculator.simple_realized_volatility(
+            returns.values, window
+        )
+        result_df[f"rv_{window}"] = rv
 
         # Parkinson volatility
-        if 'high' in df.columns and 'low' in df.columns:
+        if "high" in df.columns and "low" in df.columns:
             park_vol = RealizedVolatilityCalculator.parkinson_volatility(
-                df['high'].values, df['low'].values, window
+                df["high"].values, df["low"].values, window
             )
-            result_df[f'parkinson_vol_{window}'] = park_vol
+            result_df[f"parkinson_vol_{window}"] = park_vol
 
         # Garman-Klass volatility
-        if all(col in df.columns for col in ['open', 'high', 'low', 'close']):
+        if all(col in df.columns for col in ["open", "high", "low", "close"]):
             gk_vol = RealizedVolatilityCalculator.garman_klass_volatility(
-                df['open'].values, df['high'].values,
-                df['low'].values, df['close'].values,
-                window
+                df["open"].values,
+                df["high"].values,
+                df["low"].values,
+                df["close"].values,
+                window,
             )
-            result_df[f'garman_klass_vol_{window}'] = gk_vol
+            result_df[f"garman_klass_vol_{window}"] = gk_vol
 
             # Rogers-Satchell volatility
             rs_vol = RealizedVolatilityCalculator.rogers_satchell_volatility(
-                df['open'].values, df['high'].values,
-                df['low'].values, df['close'].values,
-                window
+                df["open"].values,
+                df["high"].values,
+                df["low"].values,
+                df["close"].values,
+                window,
             )
-            result_df[f'rogers_satchell_vol_{window}'] = rs_vol
+            result_df[f"rogers_satchell_vol_{window}"] = rs_vol
 
     return result_df
 
@@ -339,38 +335,40 @@ if __name__ == "__main__":
     bar_size = 20
 
     for i in range(0, len(prices), bar_size):
-        window = prices[i:i+bar_size]
+        window = prices[i : i + bar_size]
         if len(window) > 0:
-            bars.append({
-                'timestamp': i,
-                'open': window[0],
-                'high': np.max(window),
-                'low': np.min(window),
-                'close': window[-1]
-            })
+            bars.append(
+                {
+                    "timestamp": i,
+                    "open": window[0],
+                    "high": np.max(window),
+                    "low": np.min(window),
+                    "close": window[-1],
+                }
+            )
 
     df = pd.DataFrame(bars)
 
     # Compute volatility features
     print("Computing realized volatility features...")
-    df_with_vol = compute_volatility_features(df, windows=[20, 50], price_col='close')
+    df_with_vol = compute_volatility_features(df, windows=[20, 50], price_col="close")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Realized Volatility Features (first 10 rows)")
-    print("="*80)
+    print("=" * 80)
 
-    vol_cols = [col for col in df_with_vol.columns if 'vol' in col or 'rv' in col]
-    print(df_with_vol[['timestamp', 'close'] + vol_cols[:4]].head(10))
+    vol_cols = [col for col in df_with_vol.columns if "vol" in col or "rv" in col]
+    print(df_with_vol[["timestamp", "close"] + vol_cols[:4]].head(10))
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Volatility Statistics")
-    print("="*80)
+    print("=" * 80)
     print(df_with_vol[vol_cols].describe())
 
     # Compare estimators
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Volatility Estimator Comparison (average values)")
-    print("="*80)
+    print("=" * 80)
 
     comparison = {}
     for col in vol_cols:
@@ -386,31 +384,49 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(2, 1, figsize=(14, 10))
 
         # Price
-        axes[0].plot(df_with_vol['timestamp'], df_with_vol['close'],
-                    label='Close Price', alpha=0.7)
-        axes[0].set_title('Price Evolution')
-        axes[0].set_xlabel('Time')
-        axes[0].set_ylabel('Price')
+        axes[0].plot(
+            df_with_vol["timestamp"],
+            df_with_vol["close"],
+            label="Close Price",
+            alpha=0.7,
+        )
+        axes[0].set_title("Price Evolution")
+        axes[0].set_xlabel("Time")
+        axes[0].set_ylabel("Price")
         axes[0].legend()
         axes[0].grid(alpha=0.3)
 
         # Volatility comparison
-        axes[1].plot(df_with_vol['timestamp'], df_with_vol['rv_20'],
-                    label='Simple RV (20)', alpha=0.7)
-        axes[1].plot(df_with_vol['timestamp'], df_with_vol['parkinson_vol_20'],
-                    label='Parkinson (20)', alpha=0.7)
-        axes[1].plot(df_with_vol['timestamp'], df_with_vol['garman_klass_vol_20'],
-                    label='Garman-Klass (20)', alpha=0.7)
+        axes[1].plot(
+            df_with_vol["timestamp"],
+            df_with_vol["rv_20"],
+            label="Simple RV (20)",
+            alpha=0.7,
+        )
+        axes[1].plot(
+            df_with_vol["timestamp"],
+            df_with_vol["parkinson_vol_20"],
+            label="Parkinson (20)",
+            alpha=0.7,
+        )
+        axes[1].plot(
+            df_with_vol["timestamp"],
+            df_with_vol["garman_klass_vol_20"],
+            label="Garman-Klass (20)",
+            alpha=0.7,
+        )
 
-        axes[1].set_title('Volatility Estimators Comparison')
-        axes[1].set_xlabel('Time')
-        axes[1].set_ylabel('Volatility')
+        axes[1].set_title("Volatility Estimators Comparison")
+        axes[1].set_xlabel("Time")
+        axes[1].set_ylabel("Volatility")
         axes[1].legend()
         axes[1].grid(alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig('data/simulations/realized_volatility_example.png', dpi=150)
-        print("\nVisualization saved to: data/simulations/realized_volatility_example.png")
+        plt.savefig("data/simulations/realized_volatility_example.png", dpi=150)
+        print(
+            "\nVisualization saved to: data/simulations/realized_volatility_example.png"
+        )
 
     except ImportError:
         print("\nMatplotlib not available for visualization")

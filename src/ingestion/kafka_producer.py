@@ -16,7 +16,7 @@ from loguru import logger
 from ingestion.websocket_client import (
     OrderBookSnapshot,
     BinanceOrderBookClient,
-    CoinbaseOrderBookClient
+    CoinbaseOrderBookClient,
 )
 
 
@@ -37,7 +37,7 @@ class OrderBookKafkaProducer:
         compression_type: str = "snappy",
         acks: str = "all",
         retries: int = 3,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize Kafka producer.
@@ -55,14 +55,14 @@ class OrderBookKafkaProducer:
         # Initialize Kafka producer
         self.producer = KafkaProducer(
             bootstrap_servers=bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-            key_serializer=lambda k: k.encode('utf-8') if k else None,
+            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            key_serializer=lambda k: k.encode("utf-8") if k else None,
             compression_type=compression_type,
             acks=acks,
             retries=retries,
-            linger_ms=kwargs.get('linger_ms', 10),
-            batch_size=kwargs.get('batch_size', 16384),
-            max_in_flight_requests_per_connection=kwargs.get('max_in_flight', 5),
+            linger_ms=kwargs.get("linger_ms", 10),
+            batch_size=kwargs.get("batch_size", 16384),
+            max_in_flight_requests_per_connection=kwargs.get("max_in_flight", 5),
         )
 
         # Metrics
@@ -104,10 +104,7 @@ class OrderBookKafkaProducer:
 
             # Send to Kafka
             future = self.producer.send(
-                self.topic,
-                key=key,
-                value=message,
-                timestamp_ms=snapshot.timestamp
+                self.topic, key=key, value=message, timestamp_ms=snapshot.timestamp
             )
 
             # Add callbacks
@@ -130,17 +127,21 @@ class OrderBookKafkaProducer:
         """Close the Kafka producer."""
         self.flush()
         self.producer.close()
-        logger.info(f"Kafka producer closed. Total sent: {self.messages_sent:,}, Errors: {self.errors}")
+        logger.info(
+            f"Kafka producer closed. Total sent: {self.messages_sent:,}, Errors: {self.errors}"
+        )
 
     def get_stats(self) -> Dict[str, Any]:
         """Get producer statistics."""
         elapsed = time.time() - self.start_time
         return {
-            'messages_sent': self.messages_sent,
-            'errors': self.errors,
-            'elapsed_seconds': elapsed,
-            'messages_per_second': self.messages_sent / elapsed if elapsed > 0 else 0,
-            'error_rate': self.errors / self.messages_sent if self.messages_sent > 0 else 0
+            "messages_sent": self.messages_sent,
+            "errors": self.errors,
+            "elapsed_seconds": elapsed,
+            "messages_per_second": self.messages_sent / elapsed if elapsed > 0 else 0,
+            "error_rate": (
+                self.errors / self.messages_sent if self.messages_sent > 0 else 0
+            ),
         }
 
 
@@ -158,7 +159,7 @@ class StreamingPipeline:
         symbol: str,
         kafka_bootstrap_servers: str = "localhost:9092",
         kafka_topic: str = "order-book-snapshots",
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize streaming pipeline.
@@ -174,9 +175,7 @@ class StreamingPipeline:
 
         # Initialize Kafka producer
         self.kafka_producer = OrderBookKafkaProducer(
-            bootstrap_servers=kafka_bootstrap_servers,
-            topic=kafka_topic,
-            **kwargs
+            bootstrap_servers=kafka_bootstrap_servers, topic=kafka_topic, **kwargs
         )
 
         # Initialize WebSocket client
@@ -184,18 +183,19 @@ class StreamingPipeline:
             self.ws_client = BinanceOrderBookClient(
                 symbol=symbol,
                 on_message_callback=self.on_orderbook_update,
-                depth_levels=kwargs.get('depth_levels', 20),
-                update_speed=kwargs.get('update_speed', '100ms')
+                depth_levels=kwargs.get("depth_levels", 20),
+                update_speed=kwargs.get("update_speed", "100ms"),
             )
         elif exchange.lower() == "coinbase":
             self.ws_client = CoinbaseOrderBookClient(
-                symbol=symbol,
-                on_message_callback=self.on_orderbook_update
+                symbol=symbol, on_message_callback=self.on_orderbook_update
             )
         else:
             raise ValueError(f"Unsupported exchange: {exchange}")
 
-        logger.info(f"Streaming pipeline initialized: {exchange}:{symbol} -> Kafka:{kafka_topic}")
+        logger.info(
+            f"Streaming pipeline initialized: {exchange}:{symbol} -> Kafka:{kafka_topic}"
+        )
 
     def on_orderbook_update(self, snapshot: OrderBookSnapshot):
         """Callback for order book updates - send to Kafka."""
@@ -237,11 +237,7 @@ class MultiExchangeStreamer:
         self.pipelines = []
 
     def add_stream(
-        self,
-        exchange: str,
-        symbol: str,
-        topic: Optional[str] = None,
-        **kwargs
+        self, exchange: str, symbol: str, topic: Optional[str] = None, **kwargs
     ):
         """Add a new streaming pipeline."""
         topic = topic or "order-book-snapshots"
@@ -251,7 +247,7 @@ class MultiExchangeStreamer:
             symbol=symbol,
             kafka_bootstrap_servers=self.kafka_bootstrap_servers,
             kafka_topic=topic,
-            **kwargs
+            **kwargs,
         )
 
         self.pipelines.append(pipeline)
@@ -288,12 +284,25 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Order Book Kafka Streaming Pipeline")
-    parser.add_argument("--exchange", choices=["binance", "coinbase"], required=True, help="Exchange name")
+    parser.add_argument(
+        "--exchange",
+        choices=["binance", "coinbase"],
+        required=True,
+        help="Exchange name",
+    )
     parser.add_argument("--symbol", required=True, help="Trading symbol")
-    parser.add_argument("--kafka-servers", default="localhost:9092", help="Kafka bootstrap servers")
-    parser.add_argument("--kafka-topic", default="order-book-snapshots", help="Kafka topic")
-    parser.add_argument("--depth", type=int, default=20, help="Depth levels (Binance only)")
-    parser.add_argument("--update-speed", default="100ms", help="Update speed (Binance only)")
+    parser.add_argument(
+        "--kafka-servers", default="localhost:9092", help="Kafka bootstrap servers"
+    )
+    parser.add_argument(
+        "--kafka-topic", default="order-book-snapshots", help="Kafka topic"
+    )
+    parser.add_argument(
+        "--depth", type=int, default=20, help="Depth levels (Binance only)"
+    )
+    parser.add_argument(
+        "--update-speed", default="100ms", help="Update speed (Binance only)"
+    )
 
     args = parser.parse_args()
 
@@ -304,7 +313,7 @@ if __name__ == "__main__":
         kafka_bootstrap_servers=args.kafka_servers,
         kafka_topic=args.kafka_topic,
         depth_levels=args.depth,
-        update_speed=args.update_speed
+        update_speed=args.update_speed,
     )
 
     try:

@@ -17,7 +17,7 @@ from sqlalchemy import (
     JSON,
     Index,
     Boolean,
-    Text
+    Text,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -60,8 +60,8 @@ class OrderBookSnapshot(Base):
 
     # Indexes
     __table_args__ = (
-        Index('ix_snapshot_time_exchange_symbol', 'timestamp', 'exchange', 'symbol'),
-        Index('ix_snapshot_exchange_symbol', 'exchange', 'symbol'),
+        Index("ix_snapshot_time_exchange_symbol", "timestamp", "exchange", "symbol"),
+        Index("ix_snapshot_exchange_symbol", "exchange", "symbol"),
     )
 
     def __repr__(self):
@@ -85,7 +85,7 @@ class Trade(Base):
     is_maker = Column(Boolean)
 
     __table_args__ = (
-        Index('ix_trade_time_exchange_symbol', 'timestamp', 'exchange', 'symbol'),
+        Index("ix_trade_time_exchange_symbol", "timestamp", "exchange", "symbol"),
     )
 
 
@@ -122,7 +122,7 @@ class ComputedFeature(Base):
     features_json = Column(JSONB)
 
     __table_args__ = (
-        Index('ix_feature_time_exchange_symbol', 'timestamp', 'exchange', 'symbol'),
+        Index("ix_feature_time_exchange_symbol", "timestamp", "exchange", "symbol"),
     )
 
 
@@ -151,9 +151,7 @@ class ModelPrediction(Base):
     confidence = Column(Float)
     prediction_horizon = Column(Integer)  # ticks ahead
 
-    __table_args__ = (
-        Index('ix_prediction_time_model', 'timestamp', 'model_name'),
-    )
+    __table_args__ = (Index("ix_prediction_time_model", "timestamp", "model_name"),)
 
 
 class BacktestResult(Base):
@@ -206,6 +204,7 @@ class BacktestResult(Base):
 
 # Database connection and utilities
 
+
 class DatabaseManager:
     """Manager for database connections and operations."""
 
@@ -255,7 +254,9 @@ class DatabaseManager:
                 print(f"Error creating hypertable {table_name}: {e}")
                 session.rollback()
 
-    def create_retention_policy(self, session: Session, table_name: str, retention_days: int = 90):
+    def create_retention_policy(
+        self, session: Session, table_name: str, retention_days: int = 90
+    ):
         """Create data retention policy for TimescaleDB hypertable."""
         try:
             sql = f"""
@@ -279,6 +280,7 @@ class DatabaseManager:
 
 # Helper functions for data insertion
 
+
 def insert_order_book_snapshot(
     session: Session,
     timestamp: datetime,
@@ -286,7 +288,7 @@ def insert_order_book_snapshot(
     symbol: str,
     bids: List[List[float]],
     asks: List[List[float]],
-    sequence: int = None
+    sequence: int = None,
 ) -> OrderBookSnapshot:
     """Insert an order book snapshot into the database."""
 
@@ -308,7 +310,7 @@ def insert_order_book_snapshot(
         spread_bps=spread_bps,
         bid_volume=bid_volume,
         ask_volume=ask_volume,
-        sequence=sequence
+        sequence=sequence,
     )
 
     session.add(snapshot)
@@ -320,9 +322,17 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Database Setup and Management")
-    parser.add_argument("--create-tables", action="store_true", help="Create database tables")
-    parser.add_argument("--create-hypertables", action="store_true", help="Convert to TimescaleDB hypertables")
-    parser.add_argument("--retention-days", type=int, default=90, help="Data retention in days")
+    parser.add_argument(
+        "--create-tables", action="store_true", help="Create database tables"
+    )
+    parser.add_argument(
+        "--create-hypertables",
+        action="store_true",
+        help="Convert to TimescaleDB hypertables",
+    )
+    parser.add_argument(
+        "--retention-days", type=int, default=90, help="Data retention in days"
+    )
 
     args = parser.parse_args()
 
@@ -340,7 +350,12 @@ if __name__ == "__main__":
 
         if args.retention_days:
             print(f"Setting retention policy: {args.retention_days} days")
-            for table in ["order_book_snapshots", "trades", "computed_features", "model_predictions"]:
+            for table in [
+                "order_book_snapshots",
+                "trades",
+                "computed_features",
+                "model_predictions",
+            ]:
                 db_manager.create_retention_policy(session, table, args.retention_days)
 
         session.close()

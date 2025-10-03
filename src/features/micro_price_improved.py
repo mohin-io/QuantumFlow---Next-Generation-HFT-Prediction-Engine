@@ -65,7 +65,7 @@ class MicroPriceCalculator:
         ask_price: float,
         bid_volume: float,
         ask_volume: float,
-        strict_validation: bool = True
+        strict_validation: bool = True,
     ) -> float:
         """
         Compute volume-weighted micro-price with comprehensive validation.
@@ -154,9 +154,7 @@ class MicroPriceCalculator:
             return (bid_price + ask_price) / 2
 
         # Weighted average
-        micro_price = (
-            ask_volume * bid_price + bid_volume * ask_price
-        ) / total_volume
+        micro_price = (ask_volume * bid_price + bid_volume * ask_price) / total_volume
 
         logger.debug(
             f"Computed micro-price: {micro_price:.6f} "
@@ -173,7 +171,7 @@ class MicroPriceCalculator:
         bid_volumes: Union[float, List[float]],
         ask_volumes: Union[float, List[float]],
         depth_levels: int = 3,
-        strict_validation: bool = True
+        strict_validation: bool = True,
     ) -> float:
         """
         Compute volume-weighted mid-price using multiple depth levels.
@@ -231,13 +229,21 @@ class MicroPriceCalculator:
         total_ask_volume = sum(ask_volumes[:levels])
 
         if total_bid_volume + total_ask_volume == 0:
-            logger.debug("Zero total volume across all levels, returning simple mid-price")
+            logger.debug(
+                "Zero total volume across all levels, returning simple mid-price"
+            )
             return (bid_prices[0] + ask_prices[0]) / 2
 
-        weighted_bid = sum(p * v for p, v in zip(bid_prices[:levels], bid_volumes[:levels]))
-        weighted_ask = sum(p * v for p, v in zip(ask_prices[:levels], ask_volumes[:levels]))
+        weighted_bid = sum(
+            p * v for p, v in zip(bid_prices[:levels], bid_volumes[:levels])
+        )
+        weighted_ask = sum(
+            p * v for p, v in zip(ask_prices[:levels], ask_volumes[:levels])
+        )
 
-        weighted_mid = (weighted_bid + weighted_ask) / (total_bid_volume + total_ask_volume)
+        weighted_mid = (weighted_bid + weighted_ask) / (
+            total_bid_volume + total_ask_volume
+        )
 
         logger.debug(
             f"Computed weighted mid-price using {levels} levels: {weighted_mid:.6f}"
@@ -252,7 +258,7 @@ class MicroPriceCalculator:
         bid_volumes: List[float],
         ask_volumes: List[float],
         depth_levels: int = 5,
-        strict_validation: bool = True
+        strict_validation: bool = True,
     ) -> float:
         """
         Compute Volume-Weighted Average Price (VWAP) from order book.
@@ -307,7 +313,9 @@ class MicroPriceCalculator:
 
         vwap = sum(p * v for p, v in zip(all_prices, all_volumes)) / total_volume
 
-        logger.debug(f"Computed VWAP using {min(depth_levels, len(bid_prices))} levels: {vwap:.6f}")
+        logger.debug(
+            f"Computed VWAP using {min(depth_levels, len(bid_prices))} levels: {vwap:.6f}"
+        )
 
         return vwap
 
@@ -316,7 +324,7 @@ class MicroPriceCalculator:
         bids: List[Tuple[float, float]],
         asks: List[Tuple[float, float]],
         depth_levels: int = 3,
-        strict_validation: bool = False
+        strict_validation: bool = False,
     ) -> MicroPriceMetrics:
         """
         Compute all micro-price related metrics from order book.
@@ -380,8 +388,12 @@ class MicroPriceCalculator:
         ask_volumes = [a[1] for a in asks[:depth_levels]]
 
         weighted_mid = MicroPriceCalculator.compute_weighted_mid_price(
-            bid_prices, ask_prices, bid_volumes, ask_volumes, depth_levels,
-            strict_validation=False
+            bid_prices,
+            ask_prices,
+            bid_volumes,
+            ask_volumes,
+            depth_levels,
+            strict_validation=False,
         )
 
         # Deviation metrics
@@ -393,7 +405,7 @@ class MicroPriceCalculator:
             mid_price=mid_price,
             weighted_mid_price=weighted_mid,
             micro_price_deviation=deviation,
-            micro_price_bps_deviation=deviation_bps
+            micro_price_bps_deviation=deviation_bps,
         )
 
 
@@ -449,7 +461,9 @@ class AdaptiveFairValueEstimator:
             self.fair_value = micro_price
             logger.debug(f"Initialized fair value: {self.fair_value:.6f}")
         else:
-            self.fair_value = self.alpha * micro_price + (1 - self.alpha) * self.fair_value
+            self.fair_value = (
+                self.alpha * micro_price + (1 - self.alpha) * self.fair_value
+            )
             logger.debug(
                 f"Updated fair value: {self.fair_value:.6f} "
                 f"(micro_price={micro_price:.6f}, n_updates={self.n_updates})"
@@ -478,7 +492,7 @@ def compute_micro_price_features(
     depth_levels: int = 3,
     use_adaptive: bool = True,
     alpha: float = 0.3,
-    strict_validation: bool = False
+    strict_validation: bool = False,
 ) -> pd.DataFrame:
     """
     Compute micro-price features from DataFrame of order book snapshots.
@@ -519,7 +533,7 @@ def compute_micro_price_features(
     if df.empty:
         raise ValueError("Input DataFrame is empty")
 
-    required_cols = ['bids', 'asks']
+    required_cols = ["bids", "asks"]
     missing = set(required_cols) - set(df.columns)
     if missing:
         raise ValueError(f"DataFrame missing required columns: {missing}")
@@ -530,7 +544,9 @@ def compute_micro_price_features(
     )
 
     features = []
-    adaptive_estimator = AdaptiveFairValueEstimator(alpha=alpha) if use_adaptive else None
+    adaptive_estimator = (
+        AdaptiveFairValueEstimator(alpha=alpha) if use_adaptive else None
+    )
 
     # Use itertuples for better performance than iterrows
     for row in df.itertuples(index=False):
@@ -549,21 +565,22 @@ def compute_micro_price_features(
         )
 
         feature_dict = {
-            'micro_price': metrics.micro_price,
-            'mid_price': metrics.mid_price,
-            'weighted_mid_price': metrics.weighted_mid_price,
-            'micro_price_deviation': metrics.micro_price_deviation,
-            'micro_price_bps_deviation': metrics.micro_price_bps_deviation,
+            "micro_price": metrics.micro_price,
+            "mid_price": metrics.mid_price,
+            "weighted_mid_price": metrics.weighted_mid_price,
+            "micro_price_deviation": metrics.micro_price_deviation,
+            "micro_price_bps_deviation": metrics.micro_price_bps_deviation,
         }
 
         # Add adaptive fair value
         if use_adaptive and metrics.micro_price > 0:
             fair_value = adaptive_estimator.update(metrics.micro_price)
-            feature_dict['adaptive_fair_value'] = fair_value
-            feature_dict['price_vs_fair_value'] = metrics.micro_price - fair_value
-            feature_dict['price_vs_fair_value_bps'] = (
+            feature_dict["adaptive_fair_value"] = fair_value
+            feature_dict["price_vs_fair_value"] = metrics.micro_price - fair_value
+            feature_dict["price_vs_fair_value_bps"] = (
                 (metrics.micro_price - fair_value) / fair_value * 10000
-                if fair_value > 0 else 0
+                if fair_value > 0
+                else 0
             )
 
         features.append(feature_dict)
@@ -584,7 +601,7 @@ if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Example: Generate synthetic order book data
@@ -611,64 +628,74 @@ if __name__ == "__main__":
             bids.append([bid_price, bid_volume])
             asks.append([ask_price, ask_volume])
 
-        snapshots.append({
-            'timestamp': i,
-            'bids': bids,
-            'asks': asks
-        })
+        snapshots.append({"timestamp": i, "bids": bids, "asks": asks})
 
     df = pd.DataFrame(snapshots)
 
     # Compute micro-price features
     print("Computing micro-price features...")
-    df_with_features = compute_micro_price_features(df, depth_levels=3, use_adaptive=True)
+    df_with_features = compute_micro_price_features(
+        df, depth_levels=3, use_adaptive=True
+    )
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Micro-Price Features (first 10 rows)")
-    print("="*80)
+    print("=" * 80)
 
-    feature_cols = ['micro_price', 'mid_price', 'weighted_mid_price',
-                    'micro_price_deviation', 'adaptive_fair_value']
-    print(df_with_features[['timestamp'] + feature_cols].head(10))
+    feature_cols = [
+        "micro_price",
+        "mid_price",
+        "weighted_mid_price",
+        "micro_price_deviation",
+        "adaptive_fair_value",
+    ]
+    print(df_with_features[["timestamp"] + feature_cols].head(10))
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Feature Statistics")
-    print("="*80)
+    print("=" * 80)
     print(df_with_features[feature_cols].describe())
 
     # Analyze correlation between micro-price deviation and future price changes
-    df_with_features['future_mid_price'] = df_with_features['mid_price'].shift(-10)
-    df_with_features['future_return'] = (
-        (df_with_features['future_mid_price'] - df_with_features['mid_price']) /
-        df_with_features['mid_price']
-    )
+    df_with_features["future_mid_price"] = df_with_features["mid_price"].shift(-10)
+    df_with_features["future_return"] = (
+        df_with_features["future_mid_price"] - df_with_features["mid_price"]
+    ) / df_with_features["mid_price"]
 
-    correlation = df_with_features[['micro_price_bps_deviation', 'future_return']].corr()
-    print("\n" + "="*80)
+    correlation = df_with_features[
+        ["micro_price_bps_deviation", "future_return"]
+    ].corr()
+    print("\n" + "=" * 80)
     print("Predictive Power Analysis")
-    print("="*80)
+    print("=" * 80)
     print("Correlation between micro-price deviation and future returns:")
     print(correlation)
 
     # Test validation
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Testing Input Validation")
-    print("="*80)
+    print("=" * 80)
 
     try:
         # Should raise error
-        MicroPriceCalculator.compute_micro_price(-100, 100, 10, 10, strict_validation=True)
+        MicroPriceCalculator.compute_micro_price(
+            -100, 100, 10, 10, strict_validation=True
+        )
     except ValueError as e:
         print(f"[OK] Caught expected error for negative price: {e}")
 
     try:
         # Should raise error
-        MicroPriceCalculator.compute_micro_price(100.2, 100, 10, 10, strict_validation=True)
+        MicroPriceCalculator.compute_micro_price(
+            100.2, 100, 10, 10, strict_validation=True
+        )
     except ValueError as e:
         print(f"[OK] Caught expected error for crossed book: {e}")
 
     # Should not raise with soft validation
-    result = MicroPriceCalculator.compute_micro_price(100.2, 100, 10, 10, strict_validation=False)
+    result = MicroPriceCalculator.compute_micro_price(
+        100.2, 100, 10, 10, strict_validation=False
+    )
     print(f"[OK] Soft validation returned mid-price: {result}")
 
     print("\n[SUCCESS] All validation tests passed!")

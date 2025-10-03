@@ -66,7 +66,7 @@ class WeightedEnsemble:
         predictions = []
 
         for model in self.models:
-            if hasattr(model, 'predict_proba'):
+            if hasattr(model, "predict_proba"):
                 # Bayesian or sklearn-like models
                 if isinstance(x, torch.Tensor):
                     x_np = x.cpu().numpy()
@@ -92,7 +92,7 @@ class WeightedEnsemble:
         probs = self.predict_proba(x)
         return np.argmax(probs, axis=-1)
 
-    def update_weights(self, x: torch.Tensor, y_true: np.ndarray, method='accuracy'):
+    def update_weights(self, x: torch.Tensor, y_true: np.ndarray, method="accuracy"):
         """
         Update model weights based on recent performance.
 
@@ -110,16 +110,16 @@ class WeightedEnsemble:
         model_preds = np.array(model_preds)  # (n_models, batch_size)
 
         # Calculate performance for each model
-        if method == 'accuracy':
-            scores = np.array([
-                np.mean(preds == y_true) for preds in model_preds
-            ])
-        elif method == 'loss':
+        if method == "accuracy":
+            scores = np.array([np.mean(preds == y_true) for preds in model_preds])
+        elif method == "loss":
             # Negative log-likelihood (lower is better)
-            scores = np.array([
-                -self._nll(self.predict_proba_single(model, x), y_true)
-                for model in self.models
-            ])
+            scores = np.array(
+                [
+                    -self._nll(self.predict_proba_single(model, x), y_true)
+                    for model in self.models
+                ]
+            )
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -135,7 +135,7 @@ class WeightedEnsemble:
 
     def predict_single_model(self, model, x):
         """Get prediction from single model."""
-        if hasattr(model, 'predict'):
+        if hasattr(model, "predict"):
             if isinstance(x, torch.Tensor):
                 x_np = x.cpu().numpy()
                 return model.predict(x_np)
@@ -147,7 +147,7 @@ class WeightedEnsemble:
 
     def predict_proba_single(self, model, x):
         """Get probabilities from single model."""
-        if hasattr(model, 'predict_proba'):
+        if hasattr(model, "predict_proba"):
             if isinstance(x, torch.Tensor):
                 x_np = x.cpu().numpy()
                 return model.predict_proba(x_np)
@@ -172,16 +172,13 @@ class WeightedEnsemble:
 
     def save(self, filepath: str):
         """Save ensemble configuration."""
-        config = {
-            'weights': self.weights,
-            'n_models': self.n_models
-        }
+        config = {"weights": self.weights, "n_models": self.n_models}
         joblib.dump(config, filepath)
 
     def load(self, filepath: str):
         """Load ensemble configuration."""
         config = joblib.load(filepath)
-        self.weights = config['weights']
+        self.weights = config["weights"]
 
 
 class StackingEnsemble:
@@ -206,18 +203,15 @@ class StackingEnsemble:
         if meta_model is None:
             try:
                 import lightgbm as lgb
+
                 self.meta_model = lgb.LGBMClassifier(
-                    n_estimators=100,
-                    learning_rate=0.05,
-                    max_depth=3,
-                    random_state=42
+                    n_estimators=100, learning_rate=0.05, max_depth=3, random_state=42
                 )
             except ImportError:
                 from sklearn.ensemble import RandomForestClassifier
+
                 self.meta_model = RandomForestClassifier(
-                    n_estimators=100,
-                    max_depth=5,
-                    random_state=42
+                    n_estimators=100, max_depth=5, random_state=42
                 )
         else:
             self.meta_model = meta_model
@@ -229,7 +223,7 @@ class StackingEnsemble:
         predictions = []
 
         for model in self.base_models:
-            if hasattr(model, 'predict_proba'):
+            if hasattr(model, "predict_proba"):
                 if isinstance(x, torch.Tensor):
                     x_np = x.cpu().numpy()
                     pred = model.predict_proba(x_np)
@@ -328,7 +322,7 @@ class MultiHorizonEnsemble:
 
         for model in self.models:
             with torch.no_grad():
-                if hasattr(model, 'predict_proba'):
+                if hasattr(model, "predict_proba"):
                     if isinstance(x, torch.Tensor):
                         pred = model.predict_proba(x.cpu().numpy())
                     else:
@@ -344,10 +338,9 @@ class MultiHorizonEnsemble:
         # Adaptive weighting based on horizon
         if current_horizon is not None:
             # Weight models based on proximity to current horizon
-            horizon_weights = np.array([
-                1.0 / (1.0 + abs(h - current_horizon))
-                for h in self.horizons
-            ])
+            horizon_weights = np.array(
+                [1.0 / (1.0 + abs(h - current_horizon)) for h in self.horizons]
+            )
             horizon_weights /= np.sum(horizon_weights)
             weights = self.weights * horizon_weights
             weights /= np.sum(weights)
@@ -369,10 +362,16 @@ class MultiHorizonEnsemble:
         self.horizon_performance[horizon].append(accuracy)
 
         # Recalculate weights based on recent performance
-        avg_performance = np.array([
-            np.mean(self.horizon_performance[h]) if len(self.horizon_performance[h]) > 0 else 0.5
-            for h in self.horizons
-        ])
+        avg_performance = np.array(
+            [
+                (
+                    np.mean(self.horizon_performance[h])
+                    if len(self.horizon_performance[h]) > 0
+                    else 0.5
+                )
+                for h in self.horizons
+            ]
+        )
 
         # Softmax with temperature
         exp_perf = np.exp(avg_performance / 0.3)
@@ -381,9 +380,9 @@ class MultiHorizonEnsemble:
 
 # Example usage and testing
 if __name__ == "__main__":
-    print("="*80)
+    print("=" * 80)
     print("ENSEMBLE META-LEARNER DEMONSTRATION")
-    print("="*80)
+    print("=" * 80)
 
     # Simulate models with different behaviors
     from bayesian_online import DirichletMultinomialClassifier
@@ -412,7 +411,7 @@ if __name__ == "__main__":
 
     # Test weighted ensemble
     print("\n2. Weighted Ensemble")
-    print("-"*80)
+    print("-" * 80)
 
     ensemble = WeightedEnsemble([model1, model2, model3])
     print(f"Initial weights: {ensemble.weights}")
@@ -426,12 +425,12 @@ if __name__ == "__main__":
 
     # Update weights based on performance
     y_true = np.array([2, 2, 1, 2, 2])
-    ensemble.update_weights(x_dummy, y_true, method='accuracy')
+    ensemble.update_weights(x_dummy, y_true, method="accuracy")
     print(f"\nUpdated weights: {ensemble.weights}")
 
     # Test multi-horizon ensemble
     print("\n3. Multi-Horizon Ensemble")
-    print("-"*80)
+    print("-" * 80)
 
     horizons = [10, 50, 100]
 
@@ -442,7 +441,7 @@ if __name__ == "__main__":
             self.base_probs = np.random.dirichlet([1, 1, 1])
 
         def predict_proba(self, x):
-            batch_size = len(x) if hasattr(x, '__len__') else 1
+            batch_size = len(x) if hasattr(x, "__len__") else 1
             return np.tile(self.base_probs, (batch_size, 1))
 
     models = [MockModel(h) for h in horizons]
@@ -470,10 +469,10 @@ if __name__ == "__main__":
 
     print(f"\nUpdated weights after performance feedback: {multi_ensemble.weights}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Key Advantages:")
     print("  • Combines diverse model architectures")
     print("  • Adaptive weighting based on performance")
     print("  • Horizon-specific specialization")
     print("  • Reduces overfitting through diversity")
-    print("="*80)
+    print("=" * 80)

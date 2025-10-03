@@ -42,7 +42,7 @@ class TestOrderBookLSTM(unittest.TestCase):
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             num_classes=self.num_classes,
-            dropout=self.dropout
+            dropout=self.dropout,
         )
 
     def test_model_initialization(self):
@@ -115,12 +115,14 @@ class TestOrderBookLSTM(unittest.TestCase):
                 grad_norms.append(grad_norm)
 
                 # Check for vanishing gradients (< 1e-7)
-                self.assertGreater(grad_norm, 1e-7,
-                                 f"Vanishing gradient in {name}: {grad_norm}")
+                self.assertGreater(
+                    grad_norm, 1e-7, f"Vanishing gradient in {name}: {grad_norm}"
+                )
 
                 # Check for exploding gradients (> 100)
-                self.assertLess(grad_norm, 100,
-                              f"Exploding gradient in {name}: {grad_norm}")
+                self.assertLess(
+                    grad_norm, 100, f"Exploding gradient in {name}: {grad_norm}"
+                )
 
     def test_batch_independence(self):
         """Test predictions are independent across batch dimension."""
@@ -169,8 +171,9 @@ class TestOrderBookLSTM(unittest.TestCase):
         # Eval outputs should be identical
         eval_variance = torch.stack(outputs_eval).var(dim=0).mean().item()
 
-        self.assertGreater(train_variance, eval_variance * 10,
-                          "Dropout not working properly")
+        self.assertGreater(
+            train_variance, eval_variance * 10, "Dropout not working properly"
+        )
 
     def test_invalid_input_dimensions(self):
         """Test model rejects invalid input dimensions."""
@@ -209,14 +212,14 @@ class TestOrderBookLSTM(unittest.TestCase):
         self.model.cpu()
         x_cpu = torch.randn(4, 20, self.input_size)
         logits_cpu, _ = self.model(x_cpu)
-        self.assertEqual(logits_cpu.device.type, 'cpu')
+        self.assertEqual(logits_cpu.device.type, "cpu")
 
         # CUDA (if available)
         if torch.cuda.is_available():
             self.model.cuda()
             x_cuda = torch.randn(4, 20, self.input_size).cuda()
             logits_cuda, _ = self.model(x_cuda)
-            self.assertEqual(logits_cuda.device.type, 'cuda')
+            self.assertEqual(logits_cuda.device.type, "cuda")
 
 
 class TestAttentionLSTM(unittest.TestCase):
@@ -234,7 +237,7 @@ class TestAttentionLSTM(unittest.TestCase):
             input_size=self.input_size,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
-            num_classes=self.num_classes
+            num_classes=self.num_classes,
         )
 
     def test_forward_pass_shape(self):
@@ -263,7 +266,7 @@ class TestAttentionLSTM(unittest.TestCase):
 
         # Check gradients exist
         for name, param in self.model.named_parameters():
-            if 'attention' in name:
+            if "attention" in name:
                 self.assertIsNotNone(param.grad, f"No gradient for attention: {name}")
 
 
@@ -284,7 +287,7 @@ class TestOrderBookTransformer(unittest.TestCase):
             d_model=self.d_model,
             nhead=self.nhead,
             num_encoder_layers=self.num_encoder_layers,
-            num_classes=self.num_classes
+            num_classes=self.num_classes,
         )
 
     def test_forward_pass_shape(self):
@@ -300,10 +303,7 @@ class TestOrderBookTransformer(unittest.TestCase):
         """Test d_model validation (must be even for positional encoding)."""
         # This should work
         model = OrderBookTransformer(
-            input_size=16,
-            d_model=128,  # Even
-            nhead=8,
-            num_classes=3
+            input_size=16, d_model=128, nhead=8, num_classes=3  # Even
         )
 
         # Odd d_model may cause issues in positional encoding
@@ -314,10 +314,7 @@ class TestOrderBookTransformer(unittest.TestCase):
         """Test nhead must divide d_model evenly."""
         with self.assertRaises(AssertionError):
             OrderBookTransformer(
-                input_size=16,
-                d_model=128,
-                nhead=7,  # Doesn't divide 128
-                num_classes=3
+                input_size=16, d_model=128, nhead=7, num_classes=3  # Doesn't divide 128
             )
 
     def test_gradient_flow(self):
@@ -398,8 +395,7 @@ class TestDirichletMultinomialClassifier(unittest.TestCase):
         self.num_classes = 3
         self.alpha_prior = 1.0
         self.model = DirichletMultinomialClassifier(
-            num_classes=self.num_classes,
-            alpha_prior=self.alpha_prior
+            num_classes=self.num_classes, alpha_prior=self.alpha_prior
         )
 
     def test_initialization(self):
@@ -527,8 +523,7 @@ class TestModelPerformance(unittest.TestCase):
         print(f"  Throughput: {throughput:.0f} samples/sec")
 
         # Should be faster than 50ms for batch
-        self.assertLess(avg_time_ms, 50,
-                       f"LSTM too slow: {avg_time_ms:.2f}ms > 50ms")
+        self.assertLess(avg_time_ms, 50, f"LSTM too slow: {avg_time_ms:.2f}ms > 50ms")
 
     def test_transformer_inference_speed(self):
         """Test Transformer inference meets latency requirements."""
@@ -562,10 +557,11 @@ class TestModelPerformance(unittest.TestCase):
         print(f"  Throughput: {throughput:.0f} samples/sec")
 
         # Transformers are typically slower than LSTMs
-        self.assertLess(avg_time_ms, 100,
-                       f"Transformer too slow: {avg_time_ms:.2f}ms > 100ms")
+        self.assertLess(
+            avg_time_ms, 100, f"Transformer too slow: {avg_time_ms:.2f}ms > 100ms"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run tests with verbose output
     unittest.main(verbosity=2)

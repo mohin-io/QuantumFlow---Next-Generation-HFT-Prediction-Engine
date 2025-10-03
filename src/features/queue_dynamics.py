@@ -26,6 +26,7 @@ from collections import deque, defaultdict
 @dataclass
 class OrderBookEvent:
     """Represents an order book event."""
+
     timestamp: float
     event_type: str  # 'new', 'cancel', 'modify', 'execute'
     side: str  # 'bid' or 'ask'
@@ -67,11 +68,7 @@ class QueueDynamicsCalculator:
     metrics about market participant behavior.
     """
 
-    def __init__(
-        self,
-        window_size: int = 100,
-        time_window_seconds: float = 60.0
-    ):
+    def __init__(self, window_size: int = 100, time_window_seconds: float = 60.0):
         """
         Initialize queue dynamics calculator.
 
@@ -100,19 +97,19 @@ class QueueDynamicsCalculator:
         self.event_times.append(event.timestamp)
 
         # Update counters
-        if event.side == 'bid':
-            if event.event_type == 'new':
+        if event.side == "bid":
+            if event.event_type == "new":
                 self.bid_arrivals += 1
-            elif event.event_type == 'cancel':
+            elif event.event_type == "cancel":
                 self.bid_cancels += 1
-            elif event.event_type == 'execute':
+            elif event.event_type == "execute":
                 self.bid_executions += 1
         else:  # ask
-            if event.event_type == 'new':
+            if event.event_type == "new":
                 self.ask_arrivals += 1
-            elif event.event_type == 'cancel':
+            elif event.event_type == "cancel":
                 self.ask_cancels += 1
-            elif event.event_type == 'execute':
+            elif event.event_type == "execute":
                 self.ask_executions += 1
 
     def compute_metrics(self) -> QueueMetrics:
@@ -134,16 +131,25 @@ class QueueDynamicsCalculator:
         total_bid_events = self.bid_arrivals + self.bid_cancels + self.bid_executions
         total_ask_events = self.ask_arrivals + self.ask_cancels + self.ask_executions
 
-        bid_cancel_ratio = self.bid_cancels / total_bid_events if total_bid_events > 0 else 0
-        ask_cancel_ratio = self.ask_cancels / total_ask_events if total_ask_events > 0 else 0
-        total_cancel_ratio = (self.bid_cancels + self.ask_cancels) / (total_bid_events + total_ask_events) if (total_bid_events + total_ask_events) > 0 else 0
+        bid_cancel_ratio = (
+            self.bid_cancels / total_bid_events if total_bid_events > 0 else 0
+        )
+        ask_cancel_ratio = (
+            self.ask_cancels / total_ask_events if total_ask_events > 0 else 0
+        )
+        total_cancel_ratio = (
+            (self.bid_cancels + self.ask_cancels)
+            / (total_bid_events + total_ask_events)
+            if (total_bid_events + total_ask_events) > 0
+            else 0
+        )
 
         # Order book intensity (total event rate)
         order_book_intensity = len(self.events) / time_span
 
         # Average queue depth (simplified - using volume at different levels)
-        bid_depths = [e.volume for e in self.events if e.side == 'bid']
-        ask_depths = [e.volume for e in self.events if e.side == 'ask']
+        bid_depths = [e.volume for e in self.events if e.side == "bid"]
+        ask_depths = [e.volume for e in self.events if e.side == "ask"]
 
         avg_queue_depth_bid = np.mean(bid_depths) if bid_depths else 0
         avg_queue_depth_ask = np.mean(ask_depths) if ask_depths else 0
@@ -162,7 +168,7 @@ class QueueDynamicsCalculator:
             order_book_intensity=order_book_intensity,
             avg_queue_depth_bid=avg_queue_depth_bid,
             avg_queue_depth_ask=avg_queue_depth_ask,
-            avg_time_between_events=avg_time_between_events
+            avg_time_between_events=avg_time_between_events,
         )
 
     def _initialize_metrics(self) -> QueueMetrics:
@@ -177,7 +183,7 @@ class QueueDynamicsCalculator:
             order_book_intensity=0.0,
             avg_queue_depth_bid=0.0,
             avg_queue_depth_ask=0.0,
-            avg_time_between_events=0.0
+            avg_time_between_events=0.0,
         )
 
     def reset(self):
@@ -222,7 +228,11 @@ class OrderBookIntensityAnalyzer:
         else:
             time_diff = timestamp - self.last_event_time
             decay = np.exp(-self.decay_factor * time_diff)
-            self.current_intensity = self.base_intensity + (self.current_intensity - self.base_intensity) * decay + event_count
+            self.current_intensity = (
+                self.base_intensity
+                + (self.current_intensity - self.base_intensity) * decay
+                + event_count
+            )
 
         self.last_event_time = timestamp
         return self.current_intensity
@@ -233,8 +243,7 @@ class OrderBookIntensityAnalyzer:
 
 
 def compute_queue_metrics_from_snapshots(
-    snapshots: List[Dict],
-    window_size: int = 100
+    snapshots: List[Dict], window_size: int = 100
 ) -> pd.DataFrame:
     """
     Compute queue dynamics from order book snapshots.
@@ -255,14 +264,14 @@ def compute_queue_metrics_from_snapshots(
     prev_snapshot = None
 
     for snapshot in snapshots:
-        timestamp = snapshot.get('timestamp', 0)
-        bids = snapshot.get('bids', [])
-        asks = snapshot.get('asks', [])
+        timestamp = snapshot.get("timestamp", 0)
+        bids = snapshot.get("bids", [])
+        asks = snapshot.get("asks", [])
 
         if prev_snapshot is not None:
             # Infer events from snapshot changes
-            prev_bids = prev_snapshot.get('bids', [])
-            prev_asks = prev_snapshot.get('asks', [])
+            prev_bids = prev_snapshot.get("bids", [])
+            prev_asks = prev_snapshot.get("asks", [])
 
             # Check for new orders (simplified: compare volumes)
             if bids and prev_bids:
@@ -270,21 +279,21 @@ def compute_queue_metrics_from_snapshots(
                 if bid_vol_change > 0:
                     event = OrderBookEvent(
                         timestamp=timestamp,
-                        event_type='new',
-                        side='bid',
+                        event_type="new",
+                        side="bid",
                         price=bids[0][0],
                         volume=bid_vol_change,
-                        level=0
+                        level=0,
                     )
                     calculator.add_event(event)
                 elif bid_vol_change < 0:
                     event = OrderBookEvent(
                         timestamp=timestamp,
-                        event_type='cancel',
-                        side='bid',
+                        event_type="cancel",
+                        side="bid",
                         price=bids[0][0],
                         volume=abs(bid_vol_change),
-                        level=0
+                        level=0,
                     )
                     calculator.add_event(event)
 
@@ -293,21 +302,21 @@ def compute_queue_metrics_from_snapshots(
                 if ask_vol_change > 0:
                     event = OrderBookEvent(
                         timestamp=timestamp,
-                        event_type='new',
-                        side='ask',
+                        event_type="new",
+                        side="ask",
                         price=asks[0][0],
                         volume=ask_vol_change,
-                        level=0
+                        level=0,
                     )
                     calculator.add_event(event)
                 elif ask_vol_change < 0:
                     event = OrderBookEvent(
                         timestamp=timestamp,
-                        event_type='cancel',
-                        side='ask',
+                        event_type="cancel",
+                        side="ask",
                         price=asks[0][0],
                         volume=abs(ask_vol_change),
-                        level=0
+                        level=0,
                     )
                     calculator.add_event(event)
 
@@ -315,17 +324,17 @@ def compute_queue_metrics_from_snapshots(
         metrics = calculator.compute_metrics()
 
         metrics_dict = {
-            'timestamp': timestamp,
-            'bid_arrival_rate': metrics.bid_arrival_rate,
-            'ask_arrival_rate': metrics.ask_arrival_rate,
-            'total_arrival_rate': metrics.total_arrival_rate,
-            'bid_cancel_ratio': metrics.bid_cancel_ratio,
-            'ask_cancel_ratio': metrics.ask_cancel_ratio,
-            'total_cancel_ratio': metrics.total_cancel_ratio,
-            'order_book_intensity': metrics.order_book_intensity,
-            'avg_queue_depth_bid': metrics.avg_queue_depth_bid,
-            'avg_queue_depth_ask': metrics.avg_queue_depth_ask,
-            'avg_time_between_events': metrics.avg_time_between_events,
+            "timestamp": timestamp,
+            "bid_arrival_rate": metrics.bid_arrival_rate,
+            "ask_arrival_rate": metrics.ask_arrival_rate,
+            "total_arrival_rate": metrics.total_arrival_rate,
+            "bid_cancel_ratio": metrics.bid_cancel_ratio,
+            "ask_cancel_ratio": metrics.ask_cancel_ratio,
+            "total_cancel_ratio": metrics.total_cancel_ratio,
+            "order_book_intensity": metrics.order_book_intensity,
+            "avg_queue_depth_bid": metrics.avg_queue_depth_bid,
+            "avg_queue_depth_ask": metrics.avg_queue_depth_ask,
+            "avg_time_between_events": metrics.avg_time_between_events,
         }
 
         metrics_list.append(metrics_dict)
@@ -358,9 +367,9 @@ if __name__ == "__main__":
         mid_price += np.random.normal(0, 1)
 
         snapshot = {
-            'timestamp': timestamp,
-            'bids': [[mid_price - 0.5, bid_vol], [mid_price - 1, bid_vol * 0.8]],
-            'asks': [[mid_price + 0.5, ask_vol], [mid_price + 1, ask_vol * 0.8]]
+            "timestamp": timestamp,
+            "bids": [[mid_price - 0.5, bid_vol], [mid_price - 1, bid_vol * 0.8]],
+            "asks": [[mid_price + 0.5, ask_vol], [mid_price + 1, ask_vol * 0.8]],
         }
 
         snapshots.append(snapshot)
@@ -369,19 +378,22 @@ if __name__ == "__main__":
     print("Computing queue dynamics metrics...")
     metrics_df = compute_queue_metrics_from_snapshots(snapshots, window_size=50)
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Queue Dynamics Metrics (first 10 rows)")
-    print("="*80)
+    print("=" * 80)
 
     display_cols = [
-        'timestamp', 'bid_arrival_rate', 'ask_arrival_rate',
-        'total_cancel_ratio', 'order_book_intensity'
+        "timestamp",
+        "bid_arrival_rate",
+        "ask_arrival_rate",
+        "total_cancel_ratio",
+        "order_book_intensity",
     ]
     print(metrics_df[display_cols].head(10))
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Queue Metrics Statistics")
-    print("="*80)
+    print("=" * 80)
     print(metrics_df[display_cols[1:]].describe())
 
     # Visualize if matplotlib available
@@ -391,38 +403,58 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(3, 1, figsize=(14, 10))
 
         # Arrival rates
-        axes[0].plot(metrics_df['timestamp'], metrics_df['bid_arrival_rate'],
-                    label='Bid Arrival Rate', alpha=0.7)
-        axes[0].plot(metrics_df['timestamp'], metrics_df['ask_arrival_rate'],
-                    label='Ask Arrival Rate', alpha=0.7)
-        axes[0].set_title('Order Arrival Rates')
-        axes[0].set_xlabel('Time')
-        axes[0].set_ylabel('Rate (events/sec)')
+        axes[0].plot(
+            metrics_df["timestamp"],
+            metrics_df["bid_arrival_rate"],
+            label="Bid Arrival Rate",
+            alpha=0.7,
+        )
+        axes[0].plot(
+            metrics_df["timestamp"],
+            metrics_df["ask_arrival_rate"],
+            label="Ask Arrival Rate",
+            alpha=0.7,
+        )
+        axes[0].set_title("Order Arrival Rates")
+        axes[0].set_xlabel("Time")
+        axes[0].set_ylabel("Rate (events/sec)")
         axes[0].legend()
         axes[0].grid(alpha=0.3)
 
         # Cancellation ratio
-        axes[1].plot(metrics_df['timestamp'], metrics_df['total_cancel_ratio'],
-                    label='Cancellation Ratio', alpha=0.7, color='red')
-        axes[1].axhline(y=0.5, color='gray', linestyle='--', alpha=0.3, label='50% threshold')
-        axes[1].set_title('Order Cancellation Ratio')
-        axes[1].set_xlabel('Time')
-        axes[1].set_ylabel('Cancellation Ratio')
+        axes[1].plot(
+            metrics_df["timestamp"],
+            metrics_df["total_cancel_ratio"],
+            label="Cancellation Ratio",
+            alpha=0.7,
+            color="red",
+        )
+        axes[1].axhline(
+            y=0.5, color="gray", linestyle="--", alpha=0.3, label="50% threshold"
+        )
+        axes[1].set_title("Order Cancellation Ratio")
+        axes[1].set_xlabel("Time")
+        axes[1].set_ylabel("Cancellation Ratio")
         axes[1].legend()
         axes[1].grid(alpha=0.3)
         axes[1].set_ylim([0, 1])
 
         # Order book intensity
-        axes[2].plot(metrics_df['timestamp'], metrics_df['order_book_intensity'],
-                    label='Order Book Intensity', alpha=0.7, color='green')
-        axes[2].set_title('Order Book Event Intensity')
-        axes[2].set_xlabel('Time')
-        axes[2].set_ylabel('Intensity (events/sec)')
+        axes[2].plot(
+            metrics_df["timestamp"],
+            metrics_df["order_book_intensity"],
+            label="Order Book Intensity",
+            alpha=0.7,
+            color="green",
+        )
+        axes[2].set_title("Order Book Event Intensity")
+        axes[2].set_xlabel("Time")
+        axes[2].set_ylabel("Intensity (events/sec)")
         axes[2].legend()
         axes[2].grid(alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig('data/simulations/queue_dynamics_example.png', dpi=150)
+        plt.savefig("data/simulations/queue_dynamics_example.png", dpi=150)
         print("\nVisualization saved to: data/simulations/queue_dynamics_example.png")
 
     except ImportError:

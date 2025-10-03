@@ -274,7 +274,9 @@ class BayesianMovingAverage:
         lambda_new = self.lambda_ + 1
         mu_new = (self.lambda_ * self.mu + observation) / lambda_new
         alpha_new = self.alpha + 0.5
-        beta_new = self.beta + 0.5 * self.lambda_ * (observation - self.mu)**2 / lambda_new
+        beta_new = (
+            self.beta + 0.5 * self.lambda_ * (observation - self.mu) ** 2 / lambda_new
+        )
 
         self.lambda_ = lambda_new
         self.mu = mu_new
@@ -286,13 +288,13 @@ class BayesianMovingAverage:
 
 # Example usage
 if __name__ == "__main__":
-    print("="*80)
+    print("=" * 80)
     print("BAYESIAN ONLINE LEARNING DEMONSTRATION")
-    print("="*80)
+    print("=" * 80)
 
     # Test Dirichlet-Multinomial classifier
     print("\n1. Dirichlet-Multinomial Classifier")
-    print("-"*80)
+    print("-" * 80)
 
     classifier = DirichletMultinomialClassifier(num_classes=3, alpha_prior=1.0)
 
@@ -311,7 +313,9 @@ if __name__ == "__main__":
 
     print(f"\nAfter updates:")
     print(f"  Probabilities: {classifier.predict_proba()}")
-    print(f"  Prediction: {classifier.predict()} ({['Down', 'Flat', 'Up'][classifier.predict()]})")
+    print(
+        f"  Prediction: {classifier.predict()} ({['Down', 'Flat', 'Up'][classifier.predict()]})"
+    )
     print(f"  Uncertainty: {classifier.get_uncertainty():.4f}")
     print(f"  Confidence: {classifier.get_confidence():.4f}")
 
@@ -323,7 +327,7 @@ if __name__ == "__main__":
 
     # Test ensemble
     print("\n2. Bayesian Ensemble")
-    print("-"*80)
+    print("-" * 80)
 
     ensemble = BayesianOnlineEnsemble(num_classes=3, num_models=5)
 
@@ -341,7 +345,7 @@ if __name__ == "__main__":
 
     # Test moving average
     print("\n3. Bayesian Moving Average")
-    print("-"*80)
+    print("-" * 80)
 
     bma = BayesianMovingAverage(mu0=0.0, lambda0=1.0)
 
@@ -359,10 +363,10 @@ if __name__ == "__main__":
     print(f"  Predictive variance: {var:.4f}")
     print(f"  Predictive std: {np.sqrt(var):.4f}")
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Key Advantages:")
     print("  • No retraining required")
     print("  • Adapts to regime changes in real-time")
     print("  • Provides uncertainty estimates")
     print("  • Computationally efficient (O(1) per update)")
-    print("="*80)
+    print("=" * 80)
