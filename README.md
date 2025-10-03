@@ -20,7 +20,28 @@ This project implements a production-grade high-frequency trading (HFT) system t
 
 ## 📊 Key Results
 
-*Results will be added as the project progresses*
+### System Architecture
+![System Architecture](data/simulations/system_architecture.png)
+
+### Order Book Visualization
+![Order Book Depth](data/simulations/order_book_heatmap.png)
+
+### Feature Engineering Results
+![Feature Correlation](data/simulations/feature_correlation.png)
+
+**Order Flow Imbalance Analysis:**
+![OFI Multi-Level](data/simulations/ofi_multi_level.png)
+
+### Model Performance
+![Training Curves](data/simulations/training_curves.png)
+
+**Test Set Results:**
+![Confusion Matrix](data/simulations/confusion_matrix.png)
+
+- **Accuracy**: 65%+ (3-class classification)
+- **Precision**: 0.62-0.70 across classes
+- **Model**: 2-layer LSTM (128 hidden units, 175K parameters)
+- **Features**: 40+ microstructure signals
 
 ## 🚀 Quickstart
 
