@@ -195,15 +195,17 @@ streamlit run src/visualization/dashboard.py
 ## 🚧 Roadmap
 
 - [x] Project setup and architecture design
-- [ ] Data ingestion pipeline (Binance, Coinbase, LOBSTER)
-- [ ] Feature engineering implementation
-- [ ] Model development (LSTM, Transformer, Bayesian)
-- [ ] Backtesting engine
-- [ ] Visualization dashboard
-- [ ] API deployment
-- [ ] Cloud infrastructure (AWS)
-- [ ] Performance optimization
-- [ ] Documentation and testing
+- [x] Data ingestion pipeline (Binance, Coinbase, LOBSTER)
+- [x] Feature engineering implementation (OFI, micro-price, volume profiles)
+- [x] LSTM model architecture with attention mechanism
+- [x] FastAPI prediction service with Redis caching
+- [x] Streamlit interactive dashboard
+- [x] Docker Compose infrastructure (Postgres, Kafka, Redis, InfluxDB)
+- [ ] Model training pipeline and hyperparameter tuning
+- [ ] Backtesting engine with transaction cost modeling
+- [ ] Complete integration and end-to-end testing
+- [ ] Cloud deployment (AWS/GCP)
+- [ ] Performance optimization and production hardening
 
 ## 📝 License
 
