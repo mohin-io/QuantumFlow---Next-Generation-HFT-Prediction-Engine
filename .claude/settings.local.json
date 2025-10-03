@@ -11,7 +11,9 @@
       "Bash(python:*)",
       "Bash(pip install:*)",
       "Bash(git remote set-url:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

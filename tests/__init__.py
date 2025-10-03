@@ -1,1 +1,1 @@
-Unit tests for HFT Order Book Imbalance project.
+"""Unit tests for QuantumFlow HFT Prediction Engine."""
