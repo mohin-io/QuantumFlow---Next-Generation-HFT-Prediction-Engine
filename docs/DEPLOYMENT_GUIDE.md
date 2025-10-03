@@ -649,7 +649,7 @@ Similar costs, with sustained use discounts automatically applied.
 
 **Contact:**
 
-- GitHub Issues: https://github.com/mohin-io/hft-order-book-imbalance/issues
+- GitHub Issues: https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine/issues
 - Documentation: See docs/ folder
 
 ---

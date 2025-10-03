@@ -596,7 +596,7 @@ A: This is simulation only. No investment required.
 ## Support
 
 **For Issues**:
-- GitHub: [github.com/mohin-io/hft-order-book-imbalance](https://github.com/mohin-io/hft-order-book-imbalance)
+- GitHub: [github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 - Documentation: See `docs/` folder
 
 **For Feature Requests**:

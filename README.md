@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/mohin-io/hft-order-book-imbalance/graphs/commit-activity)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine/graphs/commit-activity)
 
 ---
 
@@ -360,7 +360,7 @@ This project positions you at the **intersection of AI and finance**—the highe
 
 ```bash
 # Clone the repository
-git clone https://github.com/mohin-io/hft-order-book-imbalance.git
+git clone https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine.git
 cd hft-order-book-imbalance
 
 # Create virtual environment
@@ -646,13 +646,13 @@ If this project helped you or inspired your work:
 
 ## 📊 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/mohin-io/hft-order-book-imbalance?style=social)
-![GitHub forks](https://img.shields.io/github/forks/mohin-io/hft-order-book-imbalance?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/mohin-io/hft-order-book-imbalance?style=social)
-![GitHub issues](https://img.shields.io/github/issues/mohin-io/hft-order-book-imbalance)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/mohin-io/hft-order-book-imbalance)
-![GitHub last commit](https://img.shields.io/github/last-commit/mohin-io/hft-order-book-imbalance)
-![Lines of code](https://img.shields.io/tokei/lines/github/mohin-io/hft-order-book-imbalance)
+![GitHub stars](https://img.shields.io/github/stars/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine?style=social)
+![GitHub forks](https://img.shields.io/github/forks/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine?style=social)
+![GitHub issues](https://img.shields.io/github/issues/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
+![GitHub last commit](https://img.shields.io/github/last-commit/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
+![Lines of code](https://img.shields.io/tokei/lines/github/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 
 ---
 

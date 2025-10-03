@@ -9,7 +9,9 @@
       "Bash(gh:*)",
       "Bash(git push:*)",
       "Bash(python:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

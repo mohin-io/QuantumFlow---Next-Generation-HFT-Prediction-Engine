@@ -12,7 +12,7 @@
 **Prepared for:** Senior Management & Technical Review Board
 **Date:** October 2025
 **Status:** Production-Ready Implementation
-**Repository:** [github.com/mohin-io/hft-order-book-imbalance](https://github.com/mohin-io/hft-order-book-imbalance)
+**Repository:** [github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 
 ---
 
@@ -868,7 +868,7 @@ This project successfully delivers a **production-ready, academically rigorous, 
 ### C. Contact Information
 
 **Project Repository:**
-[https://github.com/mohin-io/hft-order-book-imbalance](https://github.com/mohin-io/hft-order-book-imbalance)
+[https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 
 **Technical Documentation:**
 See `docs/PLAN.md` for detailed implementation plan

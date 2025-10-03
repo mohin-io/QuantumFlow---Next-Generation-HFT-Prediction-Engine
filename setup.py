@@ -15,7 +15,7 @@ setup(
     description="High-Frequency Order Book Imbalance Forecasting using ML and Computational Statistics",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mohin-io/hft-order-book-imbalance",
+    url="https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[

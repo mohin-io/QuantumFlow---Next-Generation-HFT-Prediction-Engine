@@ -681,9 +681,9 @@ data/simulations/
 ### Step 10.1: Create GitHub Repository
 
 ```bash
-# Create repo on GitHub as mohin-io/hft-order-book-imbalance
+# Create repo on GitHub as mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine
 # Add remote and push
-git remote add origin git@github.com:mohin-io/hft-order-book-imbalance.git
+git remote add origin git@github.com:mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine.git
 git branch -M main
 git push -u origin main
 ```

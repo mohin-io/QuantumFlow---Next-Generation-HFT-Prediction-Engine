@@ -234,7 +234,7 @@ pip
 ### Installation
 ```bash
 # Clone repository
-git clone https://github.com/mohin-io/hft-order-book-imbalance.git
+git clone https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine.git
 cd hft-order-book-imbalance
 
 # Install dependencies
@@ -443,7 +443,7 @@ netstat -an | findstr 8502
 ## Support
 
 For questions, issues, or feature requests:
-- GitHub Issues: [https://github.com/mohin-io/hft-order-book-imbalance/issues](https://github.com/mohin-io/hft-order-book-imbalance/issues)
+- GitHub Issues: [https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine/issues](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine/issues)
 - Documentation: See `docs/` folder
 
 ---

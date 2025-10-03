@@ -486,7 +486,7 @@ Shows prediction accuracy:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/mohin-io/hft-order-book-imbalance.git
+git clone https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine.git
 cd hft-order-book-imbalance
 
 # 2. Install dependencies
@@ -671,7 +671,7 @@ This **High-Frequency Trading Order Book Prediction System** is:
 ## 🌟 Star the Repository!
 
 If you found this project interesting or useful, please star it on GitHub:
-⭐ **[github.com/mohin-io/hft-order-book-imbalance](https://github.com/mohin-io/hft-order-book-imbalance)**
+⭐ **[github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)**
 
 ---
 

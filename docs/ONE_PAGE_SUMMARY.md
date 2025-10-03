@@ -195,7 +195,7 @@ Expected ROI: **300-600%** | Risk-Adjusted Returns: **Sharpe >1.5**
 
 <div align="center">
 
-**Repository:** [github.com/mohin-io/hft-order-book-imbalance](https://github.com/mohin-io/hft-order-book-imbalance)
+**Repository:** [github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 
 **Status:** ✅ Production Ready | **Next Step:** Cloud Deployment
 

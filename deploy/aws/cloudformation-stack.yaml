@@ -293,7 +293,7 @@ Resources:
 
             # Clone repository
             cd /home/ec2-user
-            git clone https://github.com/mohin-io/hft-order-book-imbalance.git
+            git clone https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine.git
             cd hft-order-book-imbalance
 
             # Set environment variables

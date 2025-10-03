@@ -353,7 +353,7 @@ with tab4:
 st.markdown("---")
 st.markdown("""
     **HFT Order Book Imbalance Forecasting** | Built with Streamlit, PyTorch, FastAPI
-    | [GitHub](https://github.com/mohin-io/hft-order-book-imbalance)
+    | [GitHub](https://github.com/mohin-io/QuantumFlow---Next-Generation-HFT-Prediction-Engine)
 """)
 
 # Auto-refresh (optional)
