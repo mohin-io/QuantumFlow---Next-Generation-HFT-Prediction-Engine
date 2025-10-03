@@ -252,6 +252,12 @@ python src/features/compute_features.py
 # Model training
 python src/models/train_lstm.py --config configs/lstm_config.yaml
 
+# Hyperparameter tuning
+python src/models/hyperparameter_tuning.py
+
+# Run integration tests
+pytest tests/test_integration.py -v
+
 # API server
 uvicorn src.api.prediction_service:app --reload
 
@@ -259,12 +265,31 @@ uvicorn src.api.prediction_service:app --reload
 streamlit run src/visualization/dashboard.py
 ```
 
+### Production Deployment
+
+```bash
+# AWS CloudFormation
+cd deploy/aws
+aws cloudformation create-stack --stack-name hft-production \
+  --template-body file://cloudformation-stack.yaml \
+  --parameters ParameterKey=KeyPairName,ParameterValue=your-keypair \
+  --capabilities CAPABILITY_IAM
+
+# Kubernetes (EKS/GKE)
+kubectl apply -f deploy/kubernetes/deployment.yaml
+
+# See docs/DEPLOYMENT_GUIDE.md for complete instructions
+```
+
 ## 📚 Documentation
 
-- [Implementation Plan](docs/PLAN.md) - Detailed development roadmap
-- [Architecture Guide](docs/architecture/) - System design and diagrams
-- [API Documentation](http://localhost:8000/docs) - Interactive API docs (when running)
-- [Research Notebooks](notebooks/) - Exploratory analysis and experiments
+- **[Implementation Plan](docs/PLAN.md)** - Detailed development roadmap
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Production deployment to AWS/GCP/Kubernetes
+- **[Executive Report](docs/EXECUTIVE_REPORT.md)** - Business value and ROI analysis
+- **[ESG Dashboard Guide](docs/ESG_DASHBOARD_GUIDE.md)** - ESG analytics platform
+- **[HFT Live Dashboard Guide](docs/HFT_LIVE_DASHBOARD_GUIDE.md)** - Real-time trading platform
+- **[API Documentation](http://localhost:8000/docs)** - Interactive API docs (when running)
+- **[Research Notebooks](notebooks/)** - Exploratory analysis and experiments
 
 ## 🎯 Performance Targets
 
@@ -283,11 +308,13 @@ streamlit run src/visualization/dashboard.py
 - [x] FastAPI prediction service with Redis caching
 - [x] Streamlit interactive dashboard
 - [x] Docker Compose infrastructure (Postgres, Kafka, Redis, InfluxDB)
-- [ ] Model training pipeline and hyperparameter tuning
-- [ ] Backtesting engine with transaction cost modeling
-- [ ] Complete integration and end-to-end testing
-- [ ] Cloud deployment (AWS/GCP)
-- [ ] Performance optimization and production hardening
+- [x] **Model training pipeline and hyperparameter tuning** (Optuna with TPE sampler)
+- [x] **Backtesting engine with transaction cost modeling** (realistic slippage & fees)
+- [x] **Complete integration and end-to-end testing** (feature pipeline, API, models)
+- [x] **Cloud deployment (AWS/GCP)** (CloudFormation, Kubernetes manifests)
+- [x] **Performance optimization and production hardening** (Numba JIT, caching, profiling)
+
+**✅ All roadmap items complete! System is production-ready.**
 
 ## 📝 License
 
