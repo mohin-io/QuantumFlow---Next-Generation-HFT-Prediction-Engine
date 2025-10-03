@@ -18,6 +18,18 @@ This project implements a production-grade high-frequency trading (HFT) system t
 - Production-ready API with <50ms latency
 - Comprehensive backtesting with transaction cost modeling
 
+### 📋 Executive Reports
+
+**For Senior Management:**
+- **[Executive Report](docs/EXECUTIVE_REPORT.md)** - Comprehensive 10-page report with business value, technical architecture, and ROI analysis
+- **[One-Page Summary](docs/ONE_PAGE_SUMMARY.md)** - Quick overview for decision-makers
+
+**Visual Summaries:**
+- [System Architecture](data/simulations/executive_architecture.png)
+- [Performance Dashboard](data/simulations/executive_performance_dashboard.png)
+- [Project Timeline](data/simulations/executive_project_timeline.png)
+- [ROI Projection](data/simulations/executive_roi_projection.png)
+
 ## 📊 Key Results
 
 ### System Architecture
