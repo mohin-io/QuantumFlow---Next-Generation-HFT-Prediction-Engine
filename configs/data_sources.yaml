@@ -1,0 +1,180 @@
+# Data Source Configuration for HFT Order Book Imbalance Forecasting
+
+# Binance Configuration
+binance:
+  websocket:
+    base_url: "wss://stream.binance.com:9443/ws"
+    streams:
+      - symbol: "BTCUSDT"
+        depth_levels: 20
+        update_speed: "100ms"  # 100ms or 1000ms
+      - symbol: "ETHUSDT"
+        depth_levels: 20
+        update_speed: "100ms"
+      - symbol: "BNBUSDT"
+        depth_levels: 10
+        update_speed: "100ms"
+
+  rest_api:
+    base_url: "https://api.binance.com"
+    endpoints:
+      depth: "/api/v3/depth"
+      trades: "/api/v3/trades"
+      klines: "/api/v3/klines"
+
+  rate_limits:
+    requests_per_minute: 6000
+    weight_per_minute: 12000
+
+# Coinbase Configuration
+coinbase:
+  websocket:
+    url: "wss://ws-feed.exchange.coinbase.com"
+    channels:
+      - name: "level2"
+        product_ids:
+          - "BTC-USD"
+          - "ETH-USD"
+          - "MATIC-USD"
+      - name: "ticker"
+        product_ids:
+          - "BTC-USD"
+          - "ETH-USD"
+
+  rest_api:
+    base_url: "https://api.exchange.coinbase.com"
+    endpoints:
+      products: "/products"
+      book: "/products/{product_id}/book"
+      trades: "/products/{product_id}/trades"
+
+# LOBSTER Data Configuration
+lobster:
+  data_directory: "./data/raw/lobster"
+  default_levels: 10
+  supported_exchanges:
+    - "NASDAQ"
+    - "NYSE"
+
+  parsing:
+    normalize_timestamps: true
+    timezone: "America/New_York"
+
+  # Common tickers for analysis
+  tickers:
+    - "AAPL"
+    - "MSFT"
+    - "GOOGL"
+    - "AMZN"
+    - "TSLA"
+
+# Database Configuration
+database:
+  postgresql:
+    host: "${DB_HOST:localhost}"
+    port: 5432
+    database: "hft_orderbook"
+    user: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD}"
+    pool_size: 10
+    max_overflow: 20
+
+  timescaledb:
+    hypertable_chunk_time_interval: "1 day"
+    compression_enabled: true
+    compression_after: "7 days"
+    retention_policy: "90 days"
+
+  influxdb:
+    url: "${INFLUX_URL:http://localhost:8086}"
+    token: "${INFLUX_TOKEN}"
+    org: "hft-org"
+    bucket: "orderbook-data"
+    retention_hours: 720  # 30 days
+
+# Kafka Configuration
+kafka:
+  bootstrap_servers:
+    - "localhost:9092"
+  topics:
+    order_book_snapshots: "order-book-snapshots"
+    trades: "trades"
+    features: "features-computed"
+    predictions: "model-predictions"
+
+  producer:
+    acks: "all"
+    compression_type: "snappy"
+    batch_size: 16384
+    linger_ms: 10
+    max_in_flight_requests: 5
+
+  consumer:
+    group_id: "hft-consumer-group"
+    auto_offset_reset: "earliest"
+    enable_auto_commit: true
+    max_poll_records: 500
+
+# Redis Cache Configuration
+redis:
+  host: "${REDIS_HOST:localhost}"
+  port: 6379
+  db: 0
+  password: "${REDIS_PASSWORD}"
+  decode_responses: true
+  ttl_seconds: 3600  # 1 hour cache
+
+# Data Collection Settings
+collection:
+  # Sampling configuration
+  sampling:
+    enabled: true
+    method: "time_based"  # time_based, event_based, or adaptive
+    interval_ms: 100
+
+  # Buffer settings
+  buffer:
+    max_size: 10000
+    flush_interval_seconds: 30
+
+  # Reconnection settings
+  reconnection:
+    max_attempts: 10
+    delay_seconds: 5
+    backoff_multiplier: 1.5
+
+# Feature Engineering Configuration
+features:
+  order_flow_imbalance:
+    levels: 10
+    window_sizes: [10, 50, 100]  # Number of ticks
+
+  micro_price:
+    top_levels: 3
+
+  volume_profile:
+    depth_levels: 20
+    aggregation_window_ms: 1000
+
+  queue_dynamics:
+    track_cancellations: true
+    arrival_rate_window: 100
+
+  realized_volatility:
+    estimator: "parkinson"  # parkinson, garman_klass, yang_zhang
+    window_sizes: [20, 50, 100]
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}"
+  rotation: "500 MB"
+  retention: "10 days"
+  log_directory: "./logs"
+
+  loggers:
+    ingestion: "DEBUG"
+    features: "INFO"
+    models: "INFO"
+    backtesting: "INFO"
+    api: "WARNING"

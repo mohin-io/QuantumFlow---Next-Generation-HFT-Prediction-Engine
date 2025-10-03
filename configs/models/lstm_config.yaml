@@ -1,0 +1,132 @@
+# LSTM Model Configuration
+
+model:
+  name: "OrderBookLSTM"
+  type: "sequence_classifier"
+  task: "multi_class"  # up, down, flat
+
+  architecture:
+    input_size: null  # Will be set based on features
+    hidden_size: 256
+    num_layers: 2
+    dropout: 0.3
+    bidirectional: false
+    batch_first: true
+
+  output:
+    num_classes: 3  # up, down, flat
+    class_names: ["down", "flat", "up"]
+    threshold_bps: 5  # Basis points for flat classification
+
+# Training Configuration
+training:
+  # Data split
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+  # Sequence configuration
+  sequence_length: 100  # Number of ticks in lookback window
+  prediction_horizon: 50  # Ticks ahead to predict
+  stride: 10  # Sampling stride for sequence creation
+
+  # Hyperparameters
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+
+  # Optimization
+  optimizer: "adam"
+  lr_scheduler:
+    type: "reduce_on_plateau"
+    factor: 0.5
+    patience: 5
+    min_lr: 0.00001
+
+  # Loss function
+  loss: "cross_entropy"
+  class_weights: null  # Auto-compute or specify [w1, w2, w3]
+
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+    monitor: "val_loss"
+
+  # Gradient clipping
+  gradient_clip:
+    enabled: true
+    max_norm: 1.0
+
+# Data Augmentation
+augmentation:
+  enabled: true
+  noise_std: 0.01
+  mixup_alpha: 0.2
+
+# Features
+features:
+  include:
+    - "order_flow_imbalance_L1"
+    - "order_flow_imbalance_L5"
+    - "order_flow_imbalance_L10"
+    - "micro_price"
+    - "mid_price"
+    - "spread"
+    - "spread_bps"
+    - "bid_volume_L1"
+    - "ask_volume_L1"
+    - "bid_volume_total"
+    - "ask_volume_total"
+    - "volume_imbalance"
+    - "price_momentum_10"
+    - "price_momentum_50"
+    - "realized_volatility_20"
+    - "realized_volatility_50"
+
+  normalization: "standard"  # standard, minmax, robust
+  fill_na: "forward"
+
+# Logging and Checkpointing
+checkpointing:
+  save_dir: "./models/saved/lstm"
+  save_best: true
+  save_last: true
+  monitor: "val_f1_score"
+  mode: "max"
+
+logging:
+  experiment_name: "lstm_orderbook_v1"
+  log_dir: "./logs/training"
+  log_every_n_steps: 50
+
+  # Tracking
+  use_tensorboard: true
+  use_wandb: false
+  wandb_project: "hft-orderbook-forecasting"
+
+# Evaluation
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+    - "confusion_matrix"
+
+  # Economic metrics (requires backtesting)
+  economic_metrics:
+    - "sharpe_ratio"
+    - "sortino_ratio"
+    - "max_drawdown"
+    - "win_rate"
+
+# Inference
+inference:
+  batch_size: 256
+  use_ema: false
+  ema_decay: 0.999
+  temperature_scaling: false
